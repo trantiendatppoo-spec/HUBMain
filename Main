@@ -1447,14 +1447,40 @@ Tabs.Shop:AddParagraph({
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local CommF_Remote = Remotes:WaitForChild("CommF_")
+
+-- Tọa độ NPC các melee
+local MeleeNPC = {
+    BlackLeg      = CFrame.new(-1384.88, 44.0, 3762.8),     -- W1 Baratie
+    Electro       = CFrame.new(64322.0, 18.5, 1869.0),       -- W1 Fishman
+    FishmanKarate = CFrame.new(64322.0, 18.5, 1869.0),       -- W1 Fishman
+    DragonClaw    = CFrame.new(-6018.0, 209.0, -9428.0),     -- W2 Hydra
+    Superhuman    = CFrame.new(-1175.0, 121.0, 3900.0),      -- W2 Colosseum
+    DeathStep     = CFrame.new(-1175.0, 121.0, 3900.0),      -- W2 Colosseum
+    SharkmanKarate= CFrame.new(-2604.7, 239.4, -10315.2),    -- W2 Underwater
+    ElectricClaw  = CFrame.new(-10371.5, 330.8, -10131.4),   -- W3 Ice
+    DragonTalon   = CFrame.new(-6018.0, 209.0, -9428.0),     -- W3 Hydra
+    GodHuman      = CFrame.new(-5765.0, 83.0, -9637.0),      -- W3 Castle
+}
+
+-- Hàm bay đến NPC rồi mua (dùng topos tween mượt)
+local function teleAndBuy(npcCF, buyFunc)
+    task.spawn(function()
+        local player = game:GetService("Players").LocalPlayer
+        local char = player.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        -- Bay đến NPC bằng topos
+        topos(npcCF)
+        task.wait(0.8)
+        -- Thử mua
+        pcall(buyFunc)
+    end)
+end
 Tabs.Shop:AddButton({
     Title = "Black Leg",
     Callback = function()
-        local success, result = pcall(function()
-            return CommF_Remote:InvokeServer("BuyBlackLeg")
+        teleAndBuy(MeleeNPC.BlackLeg, function()
+            CommF_Remote:InvokeServer("BuyBlackLeg")
         end)
-        if not success then
-        end
     end
 })
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1463,11 +1489,9 @@ local CommF_Remote = Remotes:WaitForChild("CommF_")
 Tabs.Shop:AddButton({
     Title = "Fishman Karate",
     Callback = function()
-        local success, result = pcall(function()
-            return CommF_Remote:InvokeServer("BuyFishmanKarate")
+        teleAndBuy(MeleeNPC.FishmanKarate, function()
+            CommF_Remote:InvokeServer("BuyFishmanKarate")
         end)
-        if not success then
-        end
     end
 })
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1476,11 +1500,9 @@ local CommF_Remote = Remotes:WaitForChild("CommF_")
 Tabs.Shop:AddButton({
     Title = "Electro",
     Callback = function()
-        local success, result = pcall(function()
-            return CommF_Remote:InvokeServer("BuyElectro")
+        teleAndBuy(MeleeNPC.Electro, function()
+            CommF_Remote:InvokeServer("BuyElectro")
         end)
-        if not success then
-        end
     end
 })
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1489,68 +1511,61 @@ local CommF_Remote = Remotes:WaitForChild("CommF_")
 Tabs.Shop:AddButton({
     Title = "Dragon Breath",
     Callback = function()
-        local success1, result1 = pcall(function()
-            return CommF_Remote:InvokeServer("BlackbeardReward", "DragonClaw", "1")
+        teleAndBuy(MeleeNPC.DragonClaw, function()
+            CommF_Remote:InvokeServer("BlackbeardReward", "DragonClaw", "1")
+            task.wait(0.3)
+            CommF_Remote:InvokeServer("BlackbeardReward", "DragonClaw", "2")
         end)
-        if not success1 then
-            return
-        end
-        local success2, result2 = pcall(function()
-            return CommF_Remote:InvokeServer("BlackbeardReward", "DragonClaw", "2")
-        end)
-        if not success2 then
-            return
-        end
     end
 })
 Tabs.Shop:AddButton({
     Title = "SuperHuman",
     Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local CommF_ = ReplicatedStorage.Remotes.CommF_
-        CommF_:InvokeServer("BuySuperhuman")
+        teleAndBuy(MeleeNPC.Superhuman, function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySuperhuman")
+        end)
     end
 })
 Tabs.Shop:AddButton({
     Title = "Death Step",
     Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local CommF_ = ReplicatedStorage.Remotes.CommF_
-        CommF_:InvokeServer("BuyDeathStep")
+        teleAndBuy(MeleeNPC.DeathStep, function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep")
+        end)
     end
 })
 Tabs.Shop:AddButton({
     Title = "Sharkman Karate",
     Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local CommF_ = ReplicatedStorage.Remotes.CommF_
-        CommF_:InvokeServer("BuySharkmanKarate", true)
-        wait(0.2)
-        CommF_:InvokeServer("BuySharkmanKarate")
+        teleAndBuy(MeleeNPC.SharkmanKarate, function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate", true)
+            task.wait(0.3)
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+        end)
     end
 })
 Tabs.Shop:AddButton({
     Title = "Electric Claw",
     Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local CommF_ = ReplicatedStorage.Remotes.CommF_
-        CommF_:InvokeServer("BuyElectricClaw")
+        teleAndBuy(MeleeNPC.ElectricClaw, function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectricClaw")
+        end)
     end
 })
 Tabs.Shop:AddButton({
     Title = "Dragon Talon",
     Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local CommF_ = ReplicatedStorage.Remotes.CommF_
-        CommF_:InvokeServer("BuyDragonTalon")
+        teleAndBuy(MeleeNPC.DragonTalon, function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDragonTalon")
+        end)
     end
 })
 Tabs.Shop:AddButton({
     Title = "God Human",
     Callback = function()
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local CommF_ = ReplicatedStorage.Remotes.CommF_
-        CommF_:InvokeServer("BuyGodhuman")
+        teleAndBuy(MeleeNPC.GodHuman, function()
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyGodhuman")
+        end)
     end
 })
 Tabs.Shop:AddButton({
@@ -8171,20 +8186,22 @@ UICorner.Parent = TextButton
 UIStroke.Color = Color3.fromRGB(255, 255, 255)
 UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 UIStroke.Parent = TextButton
-local function toggleUI()
-    MainScreenGui.Enabled = not MainScreenGui.Enabled
-end
 TextButton.MouseButton1Click:Connect(function()
+    -- Xoay button
     local goal = {Rotation = 360}
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Back)
+    local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Back)
     local tween = TweenService:Create(TextButton, tweenInfo, goal)
     tween:Play()
     tween.Completed:Connect(function()
         TextButton.Rotation = 0
-        toggleUI()
     end)
+    -- Sound
     local clickSound = sound:Clone()
     clickSound.Parent = SoundService
     clickSound:Play()
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+    -- Toggle Fluent hub bằng LeftControl key down + key up
+    local VIM = game:GetService("VirtualInputManager")
+    VIM:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+    task.wait(0.05)
+    VIM:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
 end)
