@@ -2696,21 +2696,19 @@ Slider = Tabs.Setting:AddSlider("SliderSpinSpeed", {
          getgenv().SpinSpeed = Value
     end
 })
-spawn(function()
-    local angle = 0
-    while true do
-        if getgenv().SpinPos then
-            local sd = getgenv().SpinDistance or 20
-            local ss = getgenv().SpinSpeed or 5
-            angle = angle + (ss * 0.01)
-            if angle >= math.pi * 2 then angle = angle - math.pi * 2 end
-            local x = math.cos(angle) * sd
-            local z = math.sin(angle) * sd
-            Pos = CFrame.new(x, PosY, z)
-        else
-            Pos = CFrame.new(0, PosY, 0)
-        end
-        task.wait(0.03)
+game:GetService("RunService").Heartbeat:Connect(function(dt)
+    if getgenv().SpinPos then
+        local sd = getgenv().SpinDistance or 20
+        local ss = getgenv().SpinSpeed or 5
+        -- Dùng dt để tốc độ xoay không phụ thuộc framerate
+        spinAngle = (spinAngle or 0) + (ss * dt)
+        if spinAngle >= math.pi * 2 then spinAngle = spinAngle - math.pi * 2 end
+        local x = math.cos(spinAngle) * sd
+        local z = math.sin(spinAngle) * sd
+        Pos = CFrame.new(x, PosY or 0, z)
+    else
+        spinAngle = spinAngle or 0
+        Pos = CFrame.new(0, PosY or 0, 0)
     end
 end)
 Slider = Tabs.Setting:AddSlider("Slider", {
@@ -2837,18 +2835,35 @@ spawn(function()
                                 if v.Humanoid.Health > 0 and v.Name == Mon then
                                     if string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) then
                                         foundMon = true
-                                        repeat
-                                            task.wait(0.1)
-                                            AutoHaki()
-                                            EquipWeapon(getgenv().SelectWeapon)
-                                            PosMon = v.HumanoidRootPart.CFrame
-                                            topos(v.HumanoidRootPart.CFrame * Pos)
+                                        local char = player.Character
+                                        -- Ghim quái đứng im tại vị trí hiện tại của nó
+                                        local standPos = v.HumanoidRootPart.CFrame
+                                        -- Spin connection: nhân vật xoay quanh quái, quái đứng im
+                                        local spinConn = game:GetService("RunService").Heartbeat:Connect(function()
+                                            if not v.Parent or v.Humanoid.Health <= 0 then return end
+                                            -- Ghim quái đứng im
+                                            v.HumanoidRootPart.CFrame = standPos
                                             v.HumanoidRootPart.CanCollide = false
                                             v.Humanoid.WalkSpeed = 0
                                             v.Head.CanCollide = false
+                                            -- Nhân vật xoay quanh quái theo Pos offset
+                                            char = player.Character
+                                            if char and char:FindFirstChild("HumanoidRootPart") then
+                                                local targetCF = standPos * Pos
+                                                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame:Lerp(targetCF, 0.4)
+                                            end
+                                        end)
+                                        repeat
+                                            task.wait(0.1)
+                                            if not v.Parent or v.Humanoid.Health <= 0 then break end
+                                            AutoHaki()
+                                            EquipWeapon(getgenv().SelectWeapon)
+                                            PosMon = standPos
                                             getgenv().StartMagnet = true
                                             sethiddenproperty(player, "SimulationRadius", math.huge)
                                         until not getgenv().AutoFarm or v.Humanoid.Health <= 0 or not v.Parent or not game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible
+                                        spinConn:Disconnect()
+                                        getgenv().StartMagnet = false
                                     else
                                         getgenv().StartMagnet = false
                                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
@@ -2858,7 +2873,15 @@ spawn(function()
                         end
                         if not foundMon and CFrameMon then
                             getgenv().StartMagnet = false
-                            topos(CFrameMon)
+                            local char = player.Character
+                            local myY = char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.Position.Y or 0
+                            if myY > CFrameMon.Y + 150 then
+                                if char and char:FindFirstChild("HumanoidRootPart") then
+                                    char.HumanoidRootPart.CFrame = CFrameMon
+                                end
+                            else
+                                topos(CFrameMon)
+                            end
                         end
                     end
                 end)
@@ -5155,7 +5178,7 @@ end)
 spawn(function()
     while task.wait(1) do
         if getgenv().Auto_Dungeon then
-            if not game.Players.LocalPlayer.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
+            if game.Players.LocalPlayer.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
                 local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
                 for _, island in ipairs(islands) do
                     local location = game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild(island)
