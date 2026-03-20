@@ -1,3 +1,45 @@
+-- Auto chọn phe Hải Quân khi vào game
+spawn(function()
+    local player = game:GetService("Players").LocalPlayer
+    for i = 1, 30 do
+        task.wait(1)
+        pcall(function()
+            -- Tìm nút Hải Quân trong Workspace và click vào
+            local marineBtn = game:GetService("Workspace"):FindFirstChild("Marine", true)
+                           or game:GetService("Workspace"):FindFirstChild("ChooseMarine", true)
+                           or game:GetService("Workspace"):FindFirstChild("MarineButton", true)
+            if marineBtn then
+                local cd = marineBtn:FindFirstChildOfClass("ClickDetector")
+                         or marineBtn:FindFirstChild("ClickDetector", true)
+                if cd then
+                    fireclickdetector(cd)
+                    return
+                end
+            end
+            -- Fallback: thử tìm bất kỳ ClickDetector nào trong SideSelection
+            local sideSelect = game:GetService("Workspace"):FindFirstChild("SideSelection", true)
+                            or game:GetService("Workspace"):FindFirstChild("FactionSelection", true)
+                            or game:GetService("Workspace"):FindFirstChild("ChooseSide", true)
+            if sideSelect then
+                -- Click vào phần tử thứ 2 (Hải Quân thường đứng bên phải)
+                local children = sideSelect:GetChildren()
+                for _, child in pairs(children) do
+                    if string.find(string.lower(child.Name), "marine") or string.find(string.lower(child.Name), "haiquan") then
+                        local cd = child:FindFirstChildOfClass("ClickDetector")
+                                 or child:FindFirstChild("ClickDetector", true)
+                        if cd then fireclickdetector(cd) return end
+                    end
+                end
+            end
+            -- Fallback cuối: remote trực tiếp
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ChooseSide", "Marine")
+        end)
+        -- Nếu đã có phe rồi thì dừng
+        if player.Data and player.Data:FindFirstChild("TeamMarine") then break end
+        if player.Data and player.Data:FindFirstChild("Bounty") and player.Data.Bounty.Value == 0 then break end
+    end
+end)
+
 -- Anti White Flash (chặn flash trắng khi quái chết + skill VFX)
 spawn(function()
     local Lighting = game:GetService("Lighting")
@@ -253,13 +295,19 @@ function CheckQuest()
             NameMon = "Royal Squad"
             CFrameQuest = CFrame.new(-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0)
             CFrameMon = CFrame.new(-7624.25244140625, 5658.13330078125, -1467.354248046875)
+            if getgenv().AutoFarm and (CFrameQuest.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(-7894.6176757813, 5547.1416015625, -380.29119873047))
+            end
         elseif MyLevel >= 550 and MyLevel <= 624 then
-            Mon = "Royal Soldier"
+            Mon = "Royal Guard"
             LevelQuest = 2
             NameQuest = "SkyExp2Quest"
-            NameMon = "Royal Soldier"
+            NameMon = "Royal Guard"
             CFrameQuest = CFrame.new(-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0)
-            CFrameMon = CFrame.new(-7836.75341796875, 5645.6640625, -1790.6236572265625)
+            CFrameMon = CFrame.new(-7624.25244140625, 5658.13330078125, -1467.354248046875)
+            if getgenv().AutoFarm and (CFrameQuest.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(-7894.6176757813, 5547.1416015625, -380.29119873047))
+            end
         elseif MyLevel >= 625 and MyLevel <= 649 then
             Mon = "Galley Pirate"
             LevelQuest = 1
@@ -1451,8 +1499,8 @@ local CommF_Remote = Remotes:WaitForChild("CommF_")
 -- Tọa độ NPC các melee
 local MeleeNPC = {
     BlackLeg      = CFrame.new(-1384.88, 44.0, 3762.8),     -- W1 Baratie
-    Electro       = CFrame.new(64322.0, 18.5, 1869.0),       -- W1 Fishman
-    FishmanKarate = CFrame.new(64322.0, 18.5, 1869.0),       -- W1 Fishman
+    Electro       = CFrame.new(63236.0, -2.3, 1818.0),       -- W1 Fishman Island Electro NPC
+    FishmanKarate = CFrame.new(63236.0, -2.3, 1818.0),       -- W1 Fishman Island NPC
     DragonClaw    = CFrame.new(-6018.0, 209.0, -9428.0),     -- W2 Hydra
     Superhuman    = CFrame.new(-1175.0, 121.0, 3900.0),      -- W2 Colosseum
     DeathStep     = CFrame.new(-1175.0, 121.0, 3900.0),      -- W2 Colosseum
@@ -1462,16 +1510,24 @@ local MeleeNPC = {
     GodHuman      = CFrame.new(-5765.0, 83.0, -9637.0),      -- W3 Castle
 }
 
--- Hàm bay đến NPC rồi mua (dùng topos tween mượt)
+-- Hàm bay đến NPC rồi mua (đợi đến nơi mới mua)
 local function teleAndBuy(npcCF, buyFunc)
     task.spawn(function()
         local player = game:GetService("Players").LocalPlayer
         local char = player.Character
         if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-        -- Bay đến NPC bằng topos
-        topos(npcCF)
-        task.wait(0.8)
-        -- Thử mua
+        -- Tele thẳng đến NPC (không dùng topos vì giới hạn 300 studs)
+        char.HumanoidRootPart.CFrame = npcCF
+        task.wait(0.5)
+        -- Verify đến nơi chưa, nếu chưa thì tele lại
+        char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            if (char.HumanoidRootPart.Position - npcCF.Position).Magnitude > 20 then
+                char.HumanoidRootPart.CFrame = npcCF
+                task.wait(0.5)
+            end
+        end
+        -- Mua
         pcall(buyFunc)
     end)
 end
@@ -1489,8 +1545,29 @@ local CommF_Remote = Remotes:WaitForChild("CommF_")
 Tabs.Shop:AddButton({
     Title = "Fishman Karate",
     Callback = function()
-        teleAndBuy(MeleeNPC.FishmanKarate, function()
-            CommF_Remote:InvokeServer("BuyFishmanKarate")
+        task.spawn(function()
+            local player = game:GetService("Players").LocalPlayer
+            local char = player.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+            -- Bay đến cổng xoáy Fishman Island trước
+            topos(CFrame.new(61163.8515625, 11.6796875, 1819.7841796875))
+            task.wait(1)
+            -- Gọi requestEntrance để vào đảo người cá
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875))
+            task.wait(3)
+            -- Bay đến NPC trong đảo rồi mua
+            topos(MeleeNPC.FishmanKarate)
+            local t = tick()
+            repeat
+                task.wait(0.2)
+                local char2 = player.Character
+            until not char2 or not char2:FindFirstChild("HumanoidRootPart")
+                or (char2.HumanoidRootPart.Position - MeleeNPC.FishmanKarate.Position).Magnitude <= 15
+                or tick() - t > 10
+            task.wait(0.3)
+            pcall(function()
+                CommF_Remote:InvokeServer("BuyFishmanKarate")
+            end)
         end)
     end
 })
@@ -2810,29 +2887,22 @@ Dropdown:OnChanged(function(Value)
 FarmMode = Value
 end)
 spawn(function()
-    local canRun = true
-    local debounceTime = 0.5
-    while wait(debounceTime) do
+    while task.wait(0.5) do
         if getgenv().AutoFarm and FarmMode == "Farm Level" then
-            if canRun then
-                canRun = false
-                spawn(function()
+            pcall(function()
                     local player = game:GetService("Players").LocalPlayer
-                    local questTitle = player.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text
                     local questVisible = player.PlayerGui.Main.Quest.Visible
                     local humanoidRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if not string.find(questTitle, NameMon) then
-                        getgenv().StartMagnet = false
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
-                    end
+                    -- Đang farm thì bỏ qua hết, không can thiệp
+                    if getgenv().StartMagnet then return end
                     if not questVisible then
-                        getgenv().StartMagnet = false
                         CheckQuest()
+                        getgenv().StartMagnet = false
                         if BypassTP then
                             local distance = (humanoidRoot.Position - CFrameQuest.Position).Magnitude
                             if distance > 1500 then
                                 BTP(CFrameQuest * CFrame.new(0, 20, 5))
-                            elseif distance < 1500 then
+                            else
                                 topos(CFrameQuest)
                             end
                         else
@@ -2841,31 +2911,36 @@ spawn(function()
                         if (humanoidRoot.Position - CFrameQuest.Position).Magnitude <= 20 then
                             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
                         end
-                    elseif questVisible then
-                        CheckQuest()
+                    else
+                        -- Có quest → kiểm tra có đúng quest không
+                        local questTitle = player.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text
+                        if questTitle ~= "" and NameMon and not string.find(questTitle, NameMon) then
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                            return
+                        end
+                        -- Quest đúng → đi farm
                         local enemies = game:GetService("Workspace").Enemies:GetChildren()
                         local foundMon = false
                         for _, v in pairs(enemies) do
                             if v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") then
                                 if v.Humanoid.Health > 0 and v.Name == Mon then
-                                    if string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) then
+                                    if string.find(player.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) then
                                         foundMon = true
                                         local char = player.Character
-                                        -- Ghim quái đứng im tại vị trí hiện tại của nó
                                         local standPos = v.HumanoidRootPart.CFrame
-                                        -- Spin connection: nhân vật xoay quanh quái, quái đứng im
-                                        local spinConn = game:GetService("RunService").Heartbeat:Connect(function()
+                                        if getgenv()._spinConn then
+                                            getgenv()._spinConn:Disconnect()
+                                            getgenv()._spinConn = nil
+                                        end
+                                        getgenv()._spinConn = game:GetService("RunService").Heartbeat:Connect(function()
                                             if not v.Parent or v.Humanoid.Health <= 0 then return end
-                                            -- Ghim quái đứng im
                                             v.HumanoidRootPart.CFrame = standPos
                                             v.HumanoidRootPart.CanCollide = false
                                             v.Humanoid.WalkSpeed = 0
                                             v.Head.CanCollide = false
-                                            -- Nhân vật xoay quanh quái theo Pos offset
                                             char = player.Character
                                             if char and char:FindFirstChild("HumanoidRootPart") then
-                                                local targetCF = standPos * Pos
-                                                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame:Lerp(targetCF, 0.4)
+                                                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame:Lerp(standPos * Pos, 0.4)
                                             end
                                         end)
                                         repeat
@@ -2876,8 +2951,11 @@ spawn(function()
                                             PosMon = standPos
                                             getgenv().StartMagnet = true
                                             sethiddenproperty(player, "SimulationRadius", math.huge)
-                                        until not getgenv().AutoFarm or v.Humanoid.Health <= 0 or not v.Parent or not game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible
-                                        spinConn:Disconnect()
+                                        until not getgenv().AutoFarm or v.Humanoid.Health <= 0 or not v.Parent
+                                        if getgenv()._spinConn then
+                                            getgenv()._spinConn:Disconnect()
+                                            getgenv()._spinConn = nil
+                                        end
                                         getgenv().StartMagnet = false
                                     else
                                         getgenv().StartMagnet = false
@@ -2899,10 +2977,7 @@ spawn(function()
                             end
                         end
                     end
-                end)
-                task.wait(0.5)
-                canRun = true
-            end
+            end)
         end
     end
 end)
