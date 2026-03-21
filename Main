@@ -1435,7 +1435,7 @@ Tabs.Info:AddParagraph({
 })
 Tabs.Info:AddParagraph({
     Title = "🎮 Server Discord",
-    Content = "https://discord.gg/HUtX5cTyuc"
+    Content = "https://discord.gg/zzzkqzxNg8"
 })
 Tabs.Info:AddParagraph({
     Title = "🎵 TikTok Owner",
@@ -1444,7 +1444,7 @@ Tabs.Info:AddParagraph({
 Tabs.Info:AddButton({
     Title = "Copy Discord Server",
     Callback = function()
-        pcall(function() setclipboard("https://discord.gg/HUtX5cTyuc") end)
+        pcall(function() setclipboard("https://discord.gg/zzzkqzxNg8") end)
     end
 })
 Tabs.Info:AddButton({
@@ -2880,7 +2880,7 @@ Tabs.Farming:AddButton({
     Title = "Copy discord invite link",
     Callback = function()
         pcall(function()
-            setclipboard("https://discord.gg/HUtX5cTyuc")
+            setclipboard("https://discord.gg/zzzkqzxNg8")
         end)
     end
 })
