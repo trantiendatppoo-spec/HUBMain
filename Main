@@ -1,3 +1,8 @@
+-- ===== GIẢM LAG: Giới hạn FPS xuống 30 =====
+if setfps then
+    setfps(30)
+end
+
 -- Auto chọn phe Hải Quân khi vào game
 spawn(function()
     local player = game:GetService("Players").LocalPlayer
@@ -56,18 +61,32 @@ spawn(function()
         end)
     end)
     
+    -- Debounce cho killVFX tránh spam khi nhiều object spawn cùng lúc
+    local _vfxQueue = {}
+    local _vfxRunning = false
     local function killVFX(v)
-        pcall(function()
-            if v:IsA("ParticleEmitter") and v.LightEmission and v.LightEmission >= 0.8 then
-                v.LightEmission = 0
-                v.Transparency = NumberSequence.new(1)
-            elseif v:IsA("Beam") and v.LightEmission and v.LightEmission >= 0.8 then
-                v.LightEmission = 0
-                v.Transparency = NumberSequence.new(1)
-            elseif (v:IsA("PointLight") or v:IsA("SurfaceLight") or v:IsA("SpotLight")) and v.Brightness > 5 then
-                v.Brightness = 0
-                v.Enabled = false
+        _vfxQueue[#_vfxQueue+1] = v
+        if _vfxRunning then return end
+        _vfxRunning = true
+        task.defer(function()
+            for i = 1, #_vfxQueue do
+                pcall(function()
+                    local obj = _vfxQueue[i]
+                    if not obj or not obj.Parent then return end
+                    if obj:IsA("ParticleEmitter") and obj.LightEmission and obj.LightEmission >= 0.8 then
+                        obj.LightEmission = 0
+                        obj.Transparency = NumberSequence.new(1)
+                    elseif obj:IsA("Beam") and obj.LightEmission and obj.LightEmission >= 0.8 then
+                        obj.LightEmission = 0
+                        obj.Transparency = NumberSequence.new(1)
+                    elseif (obj:IsA("PointLight") or obj:IsA("SurfaceLight") or obj:IsA("SpotLight")) and obj.Brightness > 5 then
+                        obj.Brightness = 0
+                        obj.Enabled = false
+                    end
+                end)
             end
+            _vfxQueue = {}
+            _vfxRunning = false
         end)
     end
     
@@ -3093,6 +3112,99 @@ local function stopLevelFarm()
     getgenv().StartMagnet = false
 end
 
+-- ===== FARM NEAREST (bất kỳ enemy gần nhất) =====
+local nearestFarmConn = nil
+local _nearestLastTick = 0
+local _nearestCurrentTarget = nil
+local _nearestAttackTick = 0
+
+local function _farmGetNearestAny(maxDist)
+    local root = _farmGetRoot()
+    if not root then return nil end
+    local nearest, dist = nil, math.huge
+    maxDist = maxDist or math.huge
+    for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+            local d = (mob.HumanoidRootPart.Position - root.Position).Magnitude
+            if d < dist and d <= maxDist then
+                dist = d
+                nearest = mob
+            end
+        end
+    end
+    return nearest
+end
+
+-- Lấy tất cả mob trong range để attack nhiều con
+local function _farmGetAllInRange(maxDist)
+    local root = _farmGetRoot()
+    if not root then return {} end
+    local list = {}
+    maxDist = maxDist or 60
+    for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+            local d = (mob.HumanoidRootPart.Position - root.Position).Magnitude
+            if d <= maxDist then
+                list[#list+1] = mob
+            end
+        end
+    end
+    return list
+end
+
+local function startNearestFarm()
+    if nearestFarmConn then nearestFarmConn:Disconnect() end
+    nearestFarmConn = game:GetService("RunService").Heartbeat:Connect(function()
+        if not getgenv().AutoFarmNearest then return end
+        if tick() - _nearestLastTick < 0.15 then return end
+        _nearestLastTick = tick()
+        pcall(function()
+            local root = _farmGetRoot()
+            if not root then return end
+
+            -- Di chuyển đến mob gần nhất dùng topos + Pos (spin) giống farm gốc
+            local enemy = _farmGetNearestAny(getgenv().NearestFarmRange or 2000)
+            if not enemy then
+                _nearestCurrentTarget = nil
+                getgenv().StartMagnet = false
+                return
+            end
+
+            _nearestCurrentTarget = enemy
+            -- Set StartMagnet + MonFarm + PosMon để Bring Mob hoạt động
+            getgenv().StartMagnet = true
+            MonFarm = enemy.Name
+            Mon = enemy.Name
+            PosMon = enemy.HumanoidRootPart.CFrame
+            _farmPrep(enemy)
+
+            -- Dùng topos + Pos spin giống hệt farm gốc, không teleport cứng
+            local targetCF = enemy.HumanoidRootPart.CFrame * (Pos or CFrame.new(0, 0, 0))
+            topos(targetCF)
+
+            -- Attack tất cả mob xung quanh trong 60 studs
+            local nearby = _farmGetAllInRange(60)
+            if #nearby > 0 then
+                for _, mob in pairs(nearby) do
+                    _farmAttack(mob)
+                end
+            else
+                _farmAttack(enemy)
+            end
+        end)
+    end)
+end
+
+local function stopNearestFarm()
+    if nearestFarmConn then nearestFarmConn:Disconnect(); nearestFarmConn = nil end
+    getgenv().AutoFarmNearest = false
+    _nearestCurrentTarget = nil
+end
+
+getgenv().AutoFarmNearest = false
+getgenv().NearestFarmRange = 2000
+startNearestFarm()
+
 -- ===== BONE FARM =====
 local boneFarmConn2 = nil
 local BoneSpawnPos = CFrame.new(-9515.75, 174.85, 6079.40)
@@ -3263,6 +3375,31 @@ Toggle:OnChanged(function(Value)
     getgenv().AutoFarm = Value
     StopTween(getgenv().AutoFarm)
 end)
+
+-- ===== FARM NEAREST ENEMY =====
+Tabs.Farming:AddParagraph({
+    Title = "Farm Nearest Enemy",
+    Content = "Tự động tìm và farm enemy gần nhất, không cần quest"
+})
+Slider = Tabs.Farming:AddSlider("SliderNearestRange", {
+    Title = "Nearest Farm Range",
+    Description = "Khoảng cách tìm enemy (studs)",
+    Default = 2000,
+    Min = 100,
+    Max = 5000,
+    Rounding = 0,
+})
+Slider:OnChanged(function(Value)
+    getgenv().NearestFarmRange = Value
+end)
+Toggle = Tabs.Farming:AddToggle("ToggleNearestFarm", { Title = "Farm Nearest Enemy", Default = false })
+Toggle:OnChanged(function(Value)
+    getgenv().AutoFarmNearest = Value
+    if not Value then
+        if _farmActiveTween then _farmActiveTween:Cancel(); _farmActiveTween = nil end
+    end
+end)
+-- ===================================
 Tabs.Farming:AddParagraph({
      Title = "Farming Material",
      Content = ""
@@ -8873,7 +9010,10 @@ local function _startAutoRaid()
                 -- Bước 3: Farm trong raid
                 if _isInRaid() then
                     if _raidConn then _raidConn:Disconnect(); _raidConn=nil end
+                    local _raidLastTick = 0
                     _raidConn = _RS.Heartbeat:Connect(function()
+                        if tick() - _raidLastTick < 0.1 then return end -- throttle 10 lần/giây thay vì mỗi frame
+                        _raidLastTick = tick()
                         if not getgenv().DR_AutoRaid then return end
                         if not _isInRaid() then
                             if _raidConn then _raidConn:Disconnect(); _raidConn=nil end
