@@ -716,13 +716,55 @@ function CheckQuest()
             NameMon = "Serpent Hunter"
             CFrameQuest = CFrame.new(-16665.1914, 104.596405, 1579.69434, 0.951068401, -0, -0.308980465, 0, 1, -0, 0.308980465, 0, 0.951068401)
             CFrameMon = CFrame.new(-16521.0625, 106.09285, 1488.78467, 0.469467044, 0, 0.882950008, 0, 1, 0, -0.882950008, 0, 0.469467044)
-        elseif MyLevel >= 2575 then
+        elseif MyLevel >= 2575 and MyLevel <= 2599 then
             Mon = "Skull Slayer"
             LevelQuest = 2
             NameQuest = "TikiQuest3"
             NameMon = "Skull Slayer"
             CFrameQuest = CFrame.new(-16665.1914, 104.596405, 1579.69434, 0.951068401, -0, -0.308980465, 0, 1, -0, 0.308980465, 0, 0.951068401)
             CFrameMon = CFrame.new(-16855.043, 122.457253, 1478.15308, -0.999392271, 0, -0.0348687991, 0, 1, 0, 0.0348687991, 0, -0.999392271)
+        elseif MyLevel >= 2600 and MyLevel <= 2624 then
+            Mon = "Reef Bandit"
+            LevelQuest = 1
+            NameQuest = "SubmergedQuest1"
+            NameMon = "Reef Bandit"
+            CFrameQuest = CFrame.new(10882.264, -2086.322, 10034.226)
+            CFrameMon = CFrame.new(10736.6191, -2087.8439, 9338.4882)
+        elseif MyLevel >= 2625 and MyLevel <= 2649 then
+            Mon = "Coral Pirate"
+            LevelQuest = 2
+            NameQuest = "SubmergedQuest1"
+            NameMon = "Coral Pirate"
+            CFrameQuest = CFrame.new(10882.264, -2086.322, 10034.226)
+            CFrameMon = CFrame.new(10965.1025, -2158.8842, 9177.2597)
+        elseif MyLevel >= 2650 and MyLevel <= 2674 then
+            Mon = "Sea Chanter"
+            LevelQuest = 1
+            NameQuest = "SubmergedQuest2"
+            NameMon = "Sea Chanter"
+            CFrameQuest = CFrame.new(10882.264, -2086.322, 10034.226)
+            CFrameMon = CFrame.new(10621.0342, -2087.8440, 10102.0332)
+        elseif MyLevel >= 2675 and MyLevel <= 2699 then
+            Mon = "Ocean Prophet"
+            LevelQuest = 2
+            NameQuest = "SubmergedQuest2"
+            NameMon = "Ocean Prophet"
+            CFrameQuest = CFrame.new(10882.264, -2086.322, 10034.226)
+            CFrameMon = CFrame.new(11056.1445, -2001.6717, 10117.4493)
+        elseif MyLevel >= 2700 and MyLevel <= 2724 then
+            Mon = "High Disciple"
+            LevelQuest = 1
+            NameQuest = "SubmergedQuest3"
+            NameMon = "High Disciple"
+            CFrameQuest = CFrame.new(9636.52441, -1992.19507, 9609.52832)
+            CFrameMon = CFrame.new(9828.087890625, -1940.908935546875, 9693.0634765625)
+        elseif MyLevel >= 2725 then
+            Mon = "Grand Devotee"
+            LevelQuest = 2
+            NameQuest = "SubmergedQuest3"
+            NameMon = "Grand Devotee"
+            CFrameQuest = CFrame.new(9636.52441, -1992.19507, 9609.52832)
+            CFrameMon = CFrame.new(9557.5849609375, -1928.0404052734375, 9859.1826171875)
         end
     end
 end
@@ -1025,9 +1067,6 @@ function topos(Tween_Pos)
             targetPos = Tween_Pos.Position
             oldcframe = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
             Distance = (targetPos - game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart").Position).Magnitude
-            if Distance <= 300 then
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Tween_Pos
-            end
             local aM = CheckNearestTeleporter(Tween_Pos)
             if aM then
                 pcall(function()
@@ -2897,276 +2936,325 @@ Dropdown:SetValue("Farm Level")
 Dropdown:OnChanged(function(Value)
 FarmMode = Value
 end)
-spawn(function()
-    while task.wait(0.5) do
-        if getgenv().AutoFarm and FarmMode == "Farm Level" then
-            pcall(function()
-                    local player = game:GetService("Players").LocalPlayer
-                    local questVisible = player.PlayerGui.Main.Quest.Visible
-                    local humanoidRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if getgenv().StartMagnet then return end
-                    if not questVisible then
-                        CheckQuest()
-                        getgenv().StartMagnet = false
-                        if BypassTP then
-                            local distance = (humanoidRoot.Position - CFrameQuest.Position).Magnitude
-                            if distance > 1500 then
-                                BTP(CFrameQuest * CFrame.new(0, 20, 5))
-                            else
-                                topos(CFrameQuest)
-                            end
-                        else
-                            topos(CFrameQuest)
-                        end
-                        if (humanoidRoot.Position - CFrameQuest.Position).Magnitude <= 20 then
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
-                        end
-                    else
-                        local questTitle = player.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text
-                        if questTitle ~= "" and NameMon and not string.find(questTitle, NameMon) then
-                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
-                            return
-                        end
-                        local enemies = game:GetService("Workspace").Enemies:GetChildren()
-                        local foundMon = false
-                        for _, v in pairs(enemies) do
-                            if v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") then
-                                if v.Humanoid.Health > 0 and v.Name == Mon then
-                                    if string.find(player.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) then
-                                        foundMon = true
-                                        local char = player.Character
-                                        local standPos = v.HumanoidRootPart.CFrame
-                                        if getgenv()._spinConn then
-                                            getgenv()._spinConn:Disconnect()
-                                            getgenv()._spinConn = nil
-                                        end
-                                        getgenv()._spinConn = game:GetService("RunService").Heartbeat:Connect(function()
-                                            if not v.Parent or v.Humanoid.Health <= 0 then return end
-                                            v.HumanoidRootPart.CFrame = standPos
-                                            v.HumanoidRootPart.CanCollide = false
-                                            v.Humanoid.WalkSpeed = 0
-                                            v.Head.CanCollide = false
-                                            char = player.Character
-                                            if char and char:FindFirstChild("HumanoidRootPart") then
-                                                char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame:Lerp(standPos * Pos, 0.4)
-                                            end
-                                        end)
-                                        repeat
-                                            task.wait(0.1)
-                                            if not v.Parent or v.Humanoid.Health <= 0 then break end
-                                            AutoHaki()
-                                            EquipWeapon(getgenv().SelectWeapon)
-                                            PosMon = standPos
-                                            getgenv().StartMagnet = true
-                                            sethiddenproperty(player, "SimulationRadius", math.huge)
-                                        until not getgenv().AutoFarm or v.Humanoid.Health <= 0 or not v.Parent
-                                        if getgenv()._spinConn then
-                                            getgenv()._spinConn:Disconnect()
-                                            getgenv()._spinConn = nil
-                                        end
-                                        getgenv().StartMagnet = false
-                                    else
-                                        getgenv().StartMagnet = false
-                                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
-                                    end
-                                end
-                            end
-                        end
-                        if not foundMon and CFrameMon then
-                            getgenv().StartMagnet = false
-                            local char = player.Character
-                            local myY = char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.Position.Y or 0
-                            if myY > CFrameMon.Y + 150 then
-                                if char and char:FindFirstChild("HumanoidRootPart") then
-                                    char.HumanoidRootPart.CFrame = CFrameMon
-                                end
-                            else
-                                topos(CFrameMon)
-                            end
-                        end
-                    end
-            end)
+-- ===== SHARED HELPERS (Main_chinh Style) =====
+local _farmActiveTween = nil
+
+local function _farmGetRoot()
+    local c = game:GetService("Players").LocalPlayer.Character
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+-- Tween mượt đến vị trí, không teleport
+local function _farmTween(targetCF, speed)
+    local root = _farmGetRoot()
+    if not root or not targetCF then return end
+    if _farmActiveTween then _farmActiveTween:Cancel(); _farmActiveTween = nil end
+    local dist = (root.Position - targetCF.Position).Magnitude
+    local spd = dist <= 350 and 1000 or (speed or 350)
+    _farmActiveTween = game:GetService("TweenService"):Create(
+        root, TweenInfo.new(dist / spd, Enum.EasingStyle.Linear), {CFrame = targetCF}
+    )
+    _farmActiveTween:Play()
+    _farmActiveTween.Completed:Connect(function() _farmActiveTween = nil end)
+end
+
+local function _farmGetFarmCF(mob)
+    if not mob or not mob:FindFirstChild("HumanoidRootPart") then return nil end
+    local hp = mob.HumanoidRootPart
+    local mp = hp.Position
+    local mc = hp.CFrame
+    local lf = Vector3.new(mc.LookVector.X, 0, mc.LookVector.Z)
+    lf = lf.Magnitude > 0.01 and lf.Unit or Vector3.new(0, 0, 1)
+    local tp = Vector3.new(mp.X + (-lf * 25).X, mp.Y + 25, mp.Z + (-lf * 25).Z)
+    return CFrame.new(tp, tp + lf)
+end
+
+local function _farmGetNearest(nameList)
+    local root = _farmGetRoot()
+    if not root then return nil end
+    local nearest, dist = nil, math.huge
+    for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+        if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+            for _, name in pairs(nameList) do
+                if mob.Name == name then
+                    local d = (mob.HumanoidRootPart.Position - root.Position).Magnitude
+                    if d < dist then dist = d; nearest = mob end
+                    break
+                end
+            end
         end
     end
-end)
-local Bone = {
-    ["Reborn Skeleton"] = CFrame.new(-8769.58984, 142.13063, 6055.27637),
-    ["Living Zombie"] = CFrame.new(-10156.4531, 138.652481, 5964.5752),
-    ["Demonic Soul"] = CFrame.new(-9525.17188, 172.13063, 6152.30566),
-    ["Posessed Mummy"] = CFrame.new(-9570.88281, 5.81831884, 6187.86279)
-}
-spawn(function()
-    while task.wait(0.2) do
-        if getgenv().BonesBring then
-            pcall(function()
-                for _, v in ipairs(game.Workspace.Enemies:GetChildren()) do
-                    if Bone[v.Name] and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") then
-                        v.HumanoidRootPart.CFrame = Bone[v.Name]
-                        v.Head.CanCollide = false
-                        v.Humanoid.Sit = false
-                        v.Humanoid:ChangeState(11)
-                        task.wait(0.1)
-                        v.Humanoid:ChangeState(14)
-                        v.HumanoidRootPart.CanCollide = false
-                        v.Humanoid.JumpPower = 0
-                        v.Humanoid.WalkSpeed = 0
-                        local animator = v.Humanoid:FindFirstChild("Animator")
-                        if animator then
-                            animator:Destroy()
-                        end
-                        sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                    end
-                end
-            end)
-        end
+    return nearest
+end
+
+local function _farmAttack(enemy)
+    if enemy and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+        pcall(function()
+            AutoHaki()
+            EquipWeapon(getgenv().SelectWeapon)
+            game:GetService("ReplicatedStorage").Remotes.Combat:FireServer(enemy)
+        end)
     end
-end)
-BonePos = CFrame.new(-9506.234375, 172.130615234375, 6117.0771484375)
-spawn(function()
-    while wait(0.1) do
-        if FarmMode == "Farm Bone" and getgenv().AutoFarm and World3 then
-            pcall(function()
-                local enemies = game:GetService("Workspace").Enemies:GetChildren()
-                local foundEnemy = false
-                for _, v in pairs(enemies) do
-                    if v.Name == "Reborn Skeleton" or v.Name == "Living Zombie" or v.Name == "Demonic Soul" or v.Name == "Posessed Mummy" then
-                        if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                            foundEnemy = true
-                            repeat wait(0.1)
-                                AutoHaki()
-                                EquipWeapon(getgenv().SelectWeapon)
-                                v.HumanoidRootPart.CanCollide = false
-                                v.Humanoid.WalkSpeed = 0
-                                v.Head.CanCollide = false
-                                getgenv().BonesBring = true
-                                topos(v.HumanoidRootPart.CFrame * Pos)
-                            until not getgenv().AutoFarm or not v.Parent or v.Humanoid.Health <= 0
+end
+
+local function _farmPrep(mob)
+    pcall(function()
+        mob.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+        mob.HumanoidRootPart.Transparency = 1
+        mob.Humanoid.JumpPower = 0
+        mob.Humanoid.WalkSpeed = 0
+        mob.HumanoidRootPart.CanCollide = false
+        if mob.Head then mob.Head.CanCollide = false end
+    end)
+end
+
+-- ===== FARM LEVEL =====
+local levelFarmConn = nil
+
+local function startLevelFarm()
+    if levelFarmConn then levelFarmConn:Disconnect() end
+
+    levelFarmConn = game:GetService("RunService").Heartbeat:Connect(function()
+        if not (getgenv().AutoFarm and FarmMode == "Farm Level") then return end
+        pcall(function()
+            local root = _farmGetRoot()
+            if not root then return end
+            local player = game:GetService("Players").LocalPlayer
+            CheckQuest()
+            if not Mon then return end
+
+            local questUI = player.PlayerGui.Main.Quest
+            local questVisible = questUI.Visible
+            local questTitle = ""
+            if questVisible then
+                questTitle = questUI.Container.QuestTitle.Title.Text
+            end
+
+            -- Sai quest -> bỏ quest
+            if questVisible and questTitle ~= "" and not string.find(questTitle, NameMon) then
+                getgenv().StartMagnet = false
+                pcall(function()
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                end)
+                task.wait(0.3)
+                return
+            end
+
+            -- Chưa có quest -> đến NPC nhận quest
+            if not questVisible then
+                getgenv().StartMagnet = false
+                -- Submerged Island: nếu NPC ở dưới biển (Y < 0) và player chưa ở đó
+                if CFrameQuest.Y < -100 and root.Position.Y > -100 then
+                    -- Travel vào Submerged Island qua SubmarineWorker NPC
+                    pcall(function()
+                        local subNPC = CFrame.new(-16269.7041, 25.2288494, 1373.65955)
+                        if (root.Position - subNPC.Position).Magnitude > 200 then
+                            _farmTween(subNPC, 350)
+                            task.wait(2)
                         end
-                    end
+                        game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/SubmarineWorkerSpeak"):InvokeServer("TravelToSubmergedIsland")
+                        task.wait(3)
+                    end)
+                    return
                 end
-                if not foundEnemy then
-                    if BypassTP then
-                        local playerPos = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
-                        if (playerPos - BonePos.Position).Magnitude > 1500 then
-                            BTP(BonePos)
-                        else
-                            topos(BonePos)
-                        end
-                    else
-                        topos(BonePos)
-                    end
-                    UnEquipWeapon(getgenv().SelectWeapon)
-                    getgenv().BonesBring = false
-                    topos(CFrame.new(-9515, 164, 5786))
-                    for _, v in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
-                        if v.Name == "Reborn Skeleton" or v.Name == "Living Zombie" or v.Name == "Demonic Soul" or v.Name == "Posessed Mummy" then
-                            topos(v.HumanoidRootPart.CFrame * CFrame.new(2, 20, 2))
-                        end
-                    end
+                _farmTween(CFrameQuest, 350)
+                if (root.Position - CFrameQuest.Position).Magnitude <= 20 then
+                    pcall(function()
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                    end)
+                    task.wait(0.3)
                 end
-            end)
-        end
-    end
-end)
-local Cake = {
-    ["Cookie Crafter"] = CFrame.new(-2333.28052, 37.8239059, -12093.2861),
-    ["Cake Guard"] = CFrame.new(-1575.56433, 37.8238907, -12416.2529),
-    ["Baking Staff"] = CFrame.new(-1872.35742, 37.8239517, -12899.4248),
-    ["Head Baker"] = CFrame.new(-2223.1416, 53.5283203, -12854.752)
-}
-spawn(function()
-    while task.wait(0.2) do
-        if getgenv().CakeBring then
-            pcall(function()
-                for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-                    if Cake[v.Name] then
-                        local targetCFrame = Cake[v.Name]
-                        if targetCFrame then
-                            v.HumanoidRootPart.CFrame = targetCFrame
-                        end
-                        v.Head.CanCollide = false
-                        v.Humanoid.Sit = false
-                        v.Humanoid:ChangeState(11)
-                        task.wait(0.1)
-                        v.Humanoid:ChangeState(14)
-                        v.HumanoidRootPart.CanCollide = false
-                        v.Humanoid.JumpPower = 0
-                        v.Humanoid.WalkSpeed = 0
-                        if v.Humanoid:FindFirstChild('Animator') then
-                            v.Humanoid.Animator:Destroy()
-                        end
-                        sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                    end
-                end
-            end)
-        end
-    end
-end)
-spawn(function()
-    while task.wait(0.1) do
-        if FarmMode == "Farm Katakuri" and getgenv().AutoFarm and World3 then
-            pcall(function()
-                game.ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-                if game.ReplicatedStorage:FindFirstChild("Cake Prince") or game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince") then
-                    if game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince") then
-                        for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-                            if getgenv().AutoFarm and v.Name == "Cake Prince"
-                                and v:FindFirstChild("HumanoidRootPart")
-                                and v:FindFirstChild("Humanoid")
-                                and v.Humanoid.Health > 0 then
-                                repeat
-                                    game:GetService("RunService").Heartbeat:wait()
-                                    AutoHaki()
-                                    EquipWeapon(getgenv().SelectWeapon)
-                                    v.HumanoidRootPart.CanCollide = false
-                                    v.Humanoid.WalkSpeed = 0
-                                    v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
-                                    topos(v.HumanoidRootPart.CFrame * Pos)
-                                until not getgenv().AutoFarm or not v.Parent or v.Humanoid.Health <= 0
-                            end
-                        end
-                    else
-                        if game:GetService("Workspace").Map.CakeLoaf.BigMirror.Other.Transparency == 0
-                            and (CFrame.new(-1990.672607421875, 4532.99951171875, -14973.6748046875).Position
-                            - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude >= 2000 then
-                            topos(CFrame.new(-2151.82153, 149.315704, -12404.9053))
-                        end
-                    end
+                return
+            end
+
+            -- Đang có quest đúng -> farm mob
+            if questVisible and string.find(questTitle, NameMon) then
+                local enemy = _farmGetNearest({Mon})
+
+                if enemy then
+                    getgenv().StartMagnet = true
+                    MonFarm = enemy.Name
+                    PosMon = enemy.HumanoidRootPart.CFrame
+                    _farmPrep(enemy)
+                    local cf = _farmGetFarmCF(enemy)
+                    if cf then _farmTween(cf, 350) end
+                    _farmAttack(enemy)
                 else
-                    if game:GetService("Workspace").Enemies:FindFirstChild("Cookie Crafter")
-                        or game:GetService("Workspace").Enemies:FindFirstChild("Cake Guard")
-                        or game:GetService("Workspace").Enemies:FindFirstChild("Baking Staff")
-                        or game:GetService("Workspace").Enemies:FindFirstChild("Head Baker") then
-                        for _, v in pairs(game.Workspace.Enemies:GetChildren()) do
-                            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                if (v.Name == "Cookie Crafter" or v.Name == "Cake Guard"
-                                    or v.Name == "Baking Staff" or v.Name == "Head Baker")
-                                    and v:FindFirstChild("HumanoidRootPart")
-                                    and v:FindFirstChild("Humanoid")
-                                    and v.Humanoid.Health > 0 then
-                                    repeat
-                                        game:GetService("RunService").Heartbeat:wait()
-                                        AutoHaki()
-                                        EquipWeapon(getgenv().SelectWeapon)
-                                        v.HumanoidRootPart.CanCollide = false
-                                        v.Humanoid.WalkSpeed = 0
-                                        v.Head.CanCollide = false
-                                        topos(v.HumanoidRootPart.CFrame * Pos)
-                                        getgenv().CakeBring = true
-                                    until not getgenv().AutoFarm or not v.Parent or v.Humanoid.Health <= 0
-                                end
-                            end
-                        end
-                    else
-                        local CakePos = CFrame.new(-2077, 252, -12373)
-                        if BypassTP then
-                            BTP(CakePos)
-                        else
-                            topos(CakePos)
-                        end
-                    end
+                    getgenv().StartMagnet = false
+                    if CFrameMon then _farmTween(CFrameMon, 350) end
                 end
-            end)
+            end
+        end)
+    end)
+end
+
+local function stopLevelFarm()
+    if levelFarmConn then levelFarmConn:Disconnect(); levelFarmConn = nil end
+    getgenv().StartMagnet = false
+end
+
+-- ===== BONE FARM =====
+local boneFarmConn2 = nil
+local BoneSpawnPos = CFrame.new(-9515.75, 174.85, 6079.40)
+local BonesTopiTable = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}
+
+local function startBoneFarmTopi()
+    if boneFarmConn2 then boneFarmConn2:Disconnect() end
+    if not World3 then return end
+
+    boneFarmConn2 = game:GetService("RunService").Heartbeat:Connect(function()
+        if not (getgenv().AutoFarm and FarmMode == "Farm Bone") then return end
+        pcall(function()
+            local root = _farmGetRoot()
+            if not root then return end
+            local player = game:GetService("Players").LocalPlayer
+            local questUI = player.PlayerGui.Main.Quest
+
+            local bone = _farmGetNearest(BonesTopiTable)
+
+            if bone then
+                -- Nhận quest nếu chưa có
+                if not questUI.Visible then
+                    _farmTween(CFrame.new(-9516.99316, 172.017181, 6078.46533), 350)
+                    if (root.Position - Vector3.new(-9516.99316, 172.017181, 6078.46533)).Magnitude <= 50 then
+                        local questData = {
+                            {"StartQuest", "HauntedQuest2", 2},
+                            {"StartQuest", "HauntedQuest2", 1},
+                            {"StartQuest", "HauntedQuest1", 1},
+                            {"StartQuest", "HauntedQuest1", 2}
+                        }
+                        pcall(function()
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+                                unpack(questData[math.random(1,4)])
+                            )
+                        end)
+                        task.wait(1)
+                    end
+                    return
+                end
+                -- Farm
+                getgenv().StartMagnet = true
+                MonFarm = bone.Name
+                PosMon = bone.HumanoidRootPart.CFrame
+                _farmPrep(bone)
+                local cf = _farmGetFarmCF(bone)
+                if cf then _farmTween(cf, 350) end
+                _farmAttack(bone)
+            else
+                getgenv().StartMagnet = false
+                _farmTween(BoneSpawnPos, 350)
+            end
+        end)
+    end)
+end
+
+local function stopBoneFarmTopi()
+    if boneFarmConn2 then boneFarmConn2:Disconnect(); boneFarmConn2 = nil end
+    getgenv().StartMagnet = false
+end
+
+-- ===== KATAKURI FARM =====
+local kataFarmConn2 = nil
+local CakeQuestPosTopi    = CFrame.new(-1927.92, 37.8, -12842.54)
+local CakeTeleportPosTopi = CFrame.new(-1579.91, 329.74, -12310.37)
+local CakeMirrorPosTopi   = CFrame.new(-2009.28, 4532.97, -14937.31)
+local CakePrinceTopiTable = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
+local POSCAKE_TOPI = CFrame.new(-2009.28, 4532.97, -14937.31)
+
+local function startKataFarmTopi()
+    if kataFarmConn2 then kataFarmConn2:Disconnect() end
+    if not World3 then return end
+
+    kataFarmConn2 = game:GetService("RunService").Heartbeat:Connect(function()
+        if not (getgenv().AutoFarm and FarmMode == "Farm Katakuri") then return end
+        pcall(function()
+            local root = _farmGetRoot()
+            if not root then return end
+
+            -- Cake Prince hoặc Dough King có mặt
+            local hasBoss = game:GetService("ReplicatedStorage"):FindFirstChild("Cake Prince")
+                         or game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince")
+                         or game:GetService("ReplicatedStorage"):FindFirstChild("Dough King")
+                         or game:GetService("Workspace").Enemies:FindFirstChild("Dough King")
+
+            if hasBoss then
+                local boss = _farmGetNearest({"Cake Prince", "Dough King"})
+                if boss then
+                    getgenv().StartMagnet = true
+                    MonFarm = boss.Name
+                    PosMon = boss.HumanoidRootPart.CFrame
+                    boss.HumanoidRootPart.CanCollide = false
+                    boss.Humanoid.WalkSpeed = 0
+                    boss.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                    local cf = _farmGetFarmCF(boss)
+                    if cf then _farmTween(cf, 350) end
+                    _farmAttack(boss)
+                else
+                    _farmTween(CakeMirrorPosTopi, 350)
+                end
+            else
+                -- Farm Cake mobs chờ Cake Prince spawn
+                local cakeMob = _farmGetNearest(CakePrinceTopiTable)
+                if cakeMob then
+                    getgenv().StartMagnet = true
+                    MonFarm = cakeMob.Name
+                    PosMon = cakeMob.HumanoidRootPart.CFrame
+                    POSCAKE_TOPI = cakeMob.HumanoidRootPart.CFrame
+                    _farmPrep(cakeMob)
+                    local cf = _farmGetFarmCF(cakeMob)
+                    if cf then _farmTween(cf, 350) end
+                    _farmAttack(cakeMob)
+                else
+                    getgenv().StartMagnet = false
+                    _farmTween(CakeTeleportPosTopi, 350)
+                end
+            end
+        end)
+    end)
+end
+
+local function stopKataFarmTopi()
+    if kataFarmConn2 then kataFarmConn2:Disconnect(); kataFarmConn2 = nil end
+    getgenv().StartMagnet = false
+end
+
+-- Bringmob cho Cake Prince mobs (theo style Main_chinh)
+game:GetService("RunService").Heartbeat:Connect(function()
+    pcall(function()
+        if getgenv().AutoFarm and FarmMode == "Farm Katakuri" and getgenv().StartMagnet then
+            for _, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                if (v.Name == "Cookie Crafter" or v.Name == "Cake Guard"
+                    or v.Name == "Baking Staff" or v.Name == "Head Baker")
+                    and v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid")
+                    and v.Humanoid.Health > 0
+                    and (v.HumanoidRootPart.Position - POSCAKE_TOPI.Position).Magnitude <= 350 then
+                    v.HumanoidRootPart.CFrame = POSCAKE_TOPI
+                    v.HumanoidRootPart.CanCollide = false
+                    v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                    if v.Humanoid:FindFirstChild("Animator") then v.Humanoid.Animator:Destroy() end
+                    sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge)
+                end
+            end
+        end
+    end)
+end)
+
+-- Khởi động/dừng farm tương ứng
+spawn(function()
+    while task.wait(0.2) do
+        if getgenv().AutoFarm then
+            if FarmMode == "Farm Level" and not levelFarmConn then startLevelFarm()
+            elseif FarmMode ~= "Farm Level" and levelFarmConn then stopLevelFarm() end
+
+            if FarmMode == "Farm Bone" and not boneFarmConn2 then startBoneFarmTopi()
+            elseif FarmMode ~= "Farm Bone" and boneFarmConn2 then stopBoneFarmTopi() end
+
+            if FarmMode == "Farm Katakuri" and not kataFarmConn2 then startKataFarmTopi()
+            elseif FarmMode ~= "Farm Katakuri" and kataFarmConn2 then stopKataFarmTopi() end
+        else
+            if levelFarmConn then stopLevelFarm() end
+            if boneFarmConn2 then stopBoneFarmTopi() end
+            if kataFarmConn2 then stopKataFarmTopi() end
         end
     end
 end)
@@ -5225,6 +5313,226 @@ spawn(function()
         end
     end
 end)
+local DungeonPlaceId = 73902483975735
+
+local _pl2  = game:GetService("Players").LocalPlayer
+local _RS2  = game:GetService("RunService")
+local _TS2  = game:GetService("TweenService")
+local _Rep2 = game:GetService("ReplicatedStorage")
+
+getgenv().DR_FarmDungeon  = false
+getgenv().DR_AutoRaid     = false
+getgenv().DR_Noclip       = false
+getgenv().DR_FlySpeed     = 300
+getgenv().DR_SelectChip   = "Ice"
+getgenv().DR_ChooseWP     = "Melee"
+getgenv().DR_CurrentTarget= nil
+
+-- Noclip loop (xuyên tường trong dungeon)
+_RS2.Stepped:Connect(function()
+    if getgenv().DR_Noclip and _pl2.Character then
+        for _, v in pairs(_pl2.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+-- Fly system
+local _flyBV2   = nil
+local _flyConn2 = nil
+
+local function _startFly()
+    if _flyConn2 then _flyConn2:Disconnect() end
+    local char = _pl2.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    if not _flyBV2 then
+        _flyBV2 = Instance.new("BodyVelocity")
+        _flyBV2.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        _flyBV2.Velocity  = Vector3.new(0, 0, 0)
+        _flyBV2.Parent    = hrp
+    end
+    _flyConn2 = _RS2.RenderStepped:Connect(function()
+        if hrp and (getgenv().DR_FarmDungeon or getgenv().DR_AutoRaid) then
+            hrp.Velocity = Vector3.new(0, 0, 0)
+            if _flyBV2 and _flyBV2.Parent ~= hrp then _flyBV2.Parent = hrp end
+        end
+    end)
+end
+
+local function _stopFly()
+    if _flyConn2 then _flyConn2:Disconnect(); _flyConn2 = nil end
+    if _flyBV2   then _flyBV2:Destroy();      _flyBV2   = nil end
+end
+
+-- Chọn vũ khí
+local function _selectWeapon2()
+    pcall(function()
+        local bp = _pl2.Backpack
+        for _, v in pairs(bp:GetChildren()) do
+            if v.ToolTip == getgenv().DR_ChooseWP then
+                local w = bp:FindFirstChild(v.Name)
+                if w then _pl2.Character.Humanoid:EquipTool(w) end
+                break
+            end
+        end
+    end)
+end
+
+-- Attack
+local function _attackEnemy2(enemy)
+    if enemy and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+        pcall(function()
+            _selectWeapon2()
+            _Rep2.Remotes.Combat:FireServer(enemy)
+        end)
+    end
+end
+
+-- Tween mượt đến CFrame
+local _activeTween2 = nil
+local function _tweenObj2(obj, cf, speed)
+    if not obj or not cf then return end
+    if _activeTween2 then _activeTween2:Cancel(); _activeTween2 = nil end
+    local dist = (obj.Position - cf.Position).Magnitude
+    local spd = dist <= 350 and 1000 or (speed or 300)
+    _activeTween2 = _TS2:Create(obj, TweenInfo.new(dist/spd, Enum.EasingStyle.Linear), {CFrame=cf})
+    _activeTween2:Play()
+    _activeTween2.Completed:Connect(function() _activeTween2 = nil end)
+end
+
+-- GetFarmCFrame
+local function _getFarmCF2(mob)
+    if not mob or not mob:FindFirstChild("HumanoidRootPart") then return nil end
+    local hp = mob.HumanoidRootPart
+    local mp = hp.Position
+    local mc = hp.CFrame
+    local lf = Vector3.new(mc.LookVector.X, 0, mc.LookVector.Z)
+    lf = lf.Magnitude > 0.01 and lf.Unit or Vector3.new(0, 0, 1)
+    local tp
+    if getgenv().DR_ChooseWP == "Blox Fruit" then
+        tp = Vector3.new(mp.X, mp.Y+10, mp.Z)
+    else
+        local off = -lf * 25
+        tp = Vector3.new(mp.X+off.X, mp.Y+25, mp.Z+off.Z)
+    end
+    return CFrame.new(tp, tp+lf)
+end
+
+--------------------------------------------------------------------
+-- ===== DUNGEON LOGIC (Topi Hub style) =====
+--------------------------------------------------------------------
+local _dungeonConn = nil
+
+local function _getCurrentZone()
+    local root = _pl2.Character and _pl2.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return nil end
+    local df = workspace.Map:FindFirstChild("Dungeon")
+    if not df then return nil end
+    local best, bd = nil, math.huge
+    for _, z in ipairs(df:GetChildren()) do
+        local zr = z:FindFirstChild("Root")
+        if zr and z:FindFirstChild("ExitTeleporter") then
+            local d = (zr.Position - root.Position).Magnitude
+            if d < bd then bd = d; best = z end
+        end
+    end
+    return best
+end
+
+local function _isShadowMob(n)
+    return string.find(n, "'s Shadow") or string.find(n, "Shadow")
+end
+
+local function _findShrine()
+    for _, e in ipairs(workspace.Enemies:GetChildren()) do
+        if e.Name == "Shrine" and e:FindFirstChild("Humanoid") and e:FindFirstChild("HumanoidRootPart") then
+            if e.Humanoid.Health > 0 then return e end
+        end
+    end
+end
+
+local function _getDungeonEnemies()
+    local list = {}
+    for _, e in ipairs(workspace.Enemies:GetChildren()) do
+        if e:FindFirstChild("Humanoid") and e:FindFirstChild("HumanoidRootPart") then
+            if e.Humanoid.Health > 0 and not _isShadowMob(e.Name) then
+                table.insert(list, e)
+            end
+        end
+    end
+    return list
+end
+
+local function _startDungeonFarm()
+    if _dungeonConn then _dungeonConn:Disconnect() end
+
+    _dungeonConn = _RS2.Heartbeat:Connect(function()
+        if not getgenv().DR_FarmDungeon then return end
+        pcall(function()
+            local root = _pl2.Character and _pl2.Character:FindFirstChild("HumanoidRootPart")
+            if not root then return end
+
+            local zone = _getCurrentZone()
+            if not zone then return end
+
+            local exitTP = zone:FindFirstChild("ExitTeleporter")
+            if not exitTP then return end
+
+            local exitRoot = exitTP:FindFirstChild("Root")
+            if not exitRoot then return end
+
+            -- Có BBG = đã clear, tween ra exit
+            if exitRoot:FindFirstChild("BBG") then
+                _tweenObj2(root, exitRoot.CFrame, getgenv().DR_FlySpeed)
+                task.wait(1)
+                return
+            end
+
+            -- Ưu tiên Shrine trước
+            local shrine = _findShrine()
+            if shrine then
+                getgenv().DR_CurrentTarget = shrine
+                local cf = _getFarmCF2(shrine)
+                if cf then _tweenObj2(root, cf, getgenv().DR_FlySpeed) end
+                _attackEnemy2(shrine)
+                return
+            end
+
+            -- Farm mob bình thường
+            local enemies = _getDungeonEnemies()
+            if #enemies > 0 then
+                for _, e in ipairs(enemies) do
+                    if not getgenv().DR_FarmDungeon then break end
+                    if e.Humanoid.Health > 0 then
+                        if e.Name == "PropHitboxPlaceholder" then
+                            e.Humanoid.Health = 0
+                        else
+                            getgenv().DR_CurrentTarget = e
+                            local cf = _getFarmCF2(e)
+                            if cf then _tweenObj2(root, cf, getgenv().DR_FlySpeed) end
+                            _attackEnemy2(e)
+                            break
+                        end
+                    end
+                end
+            else
+                -- Không có mob -> bay ra exit
+                getgenv().DR_CurrentTarget = nil
+                _tweenObj2(root, exitRoot.CFrame, getgenv().DR_FlySpeed)
+            end
+        end)
+    end)
+end
+
+local function _stopDungeonFarm()
+    if _dungeonConn then _dungeonConn:Disconnect(); _dungeonConn = nil end
+    getgenv().DR_CurrentTarget = nil
+end
+
+
+
 Tabs.Raid:AddParagraph({
     Title = "Raids",
     Content = ""
@@ -5531,27 +5839,19 @@ Tabs.Raid:AddSection("Dungeon Farm")
 
 Tabs.Raid:AddToggle("DR_DungeonToggle", {
     Title       = "Auto Dungeon Farm",
-    Description = "Chỉ hoạt động trong Dungeon PlaceId",
+    Description = "Vào Dungeon trước rồi mới bật",
     Default     = false,
     Callback    = function(v)
-        getgenv().DR_FarmDungeon = v
-        getgenv().DR_Noclip      = v
-
         if v then
-            if game.PlaceId ~= DungeonPlaceId then
-                Fluent:Notify({Title="Sai PlaceId", Content="Vào Dungeon trước đã bro!", Duration=5})
-                getgenv().DR_FarmDungeon = false
-                getgenv().DR_Noclip      = false
-                return
-            end
-            getgenv().DR_IsFarming = true
+            getgenv().DR_FarmDungeon = true
+            getgenv().DR_Noclip      = true
             _startFly()
             _startDungeonFarm()
         else
+            getgenv().DR_FarmDungeon = false
             _stopDungeonFarm()
             if not getgenv().DR_AutoRaid then
-                getgenv().DR_IsFarming = false
-                getgenv().DR_Noclip    = false
+                getgenv().DR_Noclip = false
                 _stopFly()
             end
         end
@@ -8477,229 +8777,6 @@ local _RS  = game:GetService("RunService")
 local _TS  = game:GetService("TweenService")
 local _Rep = game:GetService("ReplicatedStorage")
 local _pl  = game:GetService("Players").LocalPlayer
-
-local DungeonPlaceId = 73902483975735
-
-local _World2 = game.PlaceId == 4442272183 or game.PlaceId == 79091703265657
-local _World3 = game.PlaceId == 7449423635 or game.PlaceId == 100117331123089
-
--- ===== SHARED FLAGS =====
-getgenv().DR_IsFarming    = false
-getgenv().DR_FarmDungeon  = false
-getgenv().DR_AutoRaid     = false
-getgenv().DR_Noclip       = false
-getgenv().DR_FlySpeed     = 300
-getgenv().DR_SelectChip   = "Ice"
-getgenv().DR_ChooseWP     = "Melee"
-getgenv().DR_SelectWeapon = nil
-getgenv().DR_CurrentTarget= nil
-getgenv().DR_BuddhaTransforming = false
-
--- ===== HELPERS =====
-local function _getChar()
-    repeat task.wait() until _pl.Character and _pl.Character:FindFirstChild("HumanoidRootPart")
-    return _pl.Character
-end
-
-local function _getRoot()
-    local c = _pl.Character
-    return c and c:FindFirstChild("HumanoidRootPart")
-end
-
--- Noclip loop
-_RS.Stepped:Connect(function()
-    if getgenv().DR_Noclip and _pl.Character then
-        for _,v in pairs(_pl.Character:GetDescendants()) do
-            if v:IsA("BasePart") then v.CanCollide = false end
-        end
-    end
-end)
-
--- Chọn vũ khí
-local function _selectWeapon()
-    pcall(function()
-        if not getgenv().DR_IsFarming then return end
-        local bp = _pl.Backpack
-        for _, v in pairs(bp:GetChildren()) do
-            if v.ToolTip == getgenv().DR_ChooseWP then
-                getgenv().DR_SelectWeapon = v.Name; break
-            end
-        end
-        if getgenv().DR_SelectWeapon then
-            local w = bp:FindFirstChild(getgenv().DR_SelectWeapon)
-            if w then _pl.Character.Humanoid:EquipTool(w) end
-        end
-    end)
-end
-
--- Attack enemy
-local function _attackEnemy(enemy)
-    if getgenv().DR_BuddhaTransforming then return end
-    if enemy and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-        pcall(function()
-            _selectWeapon()
-            _Rep.Remotes.Combat:FireServer(enemy)
-        end)
-    end
-end
-
--- TweenObject
-local _activeTween = nil
-local function _tweenObj(obj, cf, speed)
-    if not obj or not cf then return end
-    if getgenv().DR_BuddhaTransforming then return end
-    if _activeTween then _activeTween:Cancel(); _activeTween = nil end
-    local dist = (obj.Position - cf.Position).Magnitude
-    local spd = dist <= 350 and 1000 or speed
-    _activeTween = _TS:Create(obj, TweenInfo.new(dist/spd, Enum.EasingStyle.Linear), {CFrame=cf})
-    _activeTween:Play()
-    _activeTween.Completed:Connect(function() _activeTween = nil end)
-end
-
--- GetFarmCFrame
-local function _getFarmCF(mob)
-    if not mob or not mob:FindFirstChild("HumanoidRootPart") then return nil end
-    local hp = mob.HumanoidRootPart
-    local mp = hp.Position
-    local mc = hp.CFrame
-    local lf = Vector3.new(mc.LookVector.X,0,mc.LookVector.Z)
-    lf = lf.Magnitude > 0.01 and lf.Unit or Vector3.new(0,0,1)
-    local tp
-    if getgenv().DR_ChooseWP == "Blox Fruit" then
-        tp = Vector3.new(mp.X, mp.Y+10, mp.Z)
-    else
-        local off = -lf * 25
-        tp = Vector3.new(mp.X+off.X, mp.Y+25, mp.Z+off.Z)
-    end
-    return CFrame.new(tp, tp+lf)
-end
-
--- Fly
-local _flyConn = nil
-local _flyBV   = nil
-
-local function _startFly()
-    if _flyConn then _flyConn:Disconnect() end
-    local char = _getChar()
-    local hrp  = char.HumanoidRootPart
-    if not _flyBV then
-        _flyBV = Instance.new("BodyVelocity")
-        _flyBV.MaxForce = Vector3.new(9e9,9e9,9e9)
-        _flyBV.Velocity  = Vector3.new(0,0,0)
-        _flyBV.Parent    = hrp
-    end
-    _flyConn = _RS.RenderStepped:Connect(function()
-        if hrp and getgenv().DR_IsFarming then
-            hrp.Velocity = Vector3.new(0,0,0)
-            if _flyBV and _flyBV.Parent ~= hrp then _flyBV.Parent = hrp end
-        end
-    end)
-end
-
-local function _stopFly()
-    if _flyConn then _flyConn:Disconnect(); _flyConn = nil end
-    if _flyBV   then _flyBV:Destroy();      _flyBV   = nil end
-end
-
--- TP helper
-local function _tp(cf)
-    local r = _getRoot(); if r then r.CFrame = cf end
-end
-
---------------------------------------------------------------------
--- ===== DUNGEON LOGIC =====
---------------------------------------------------------------------
-local _dungeonConn = nil
-
-local function _getCurrentZone()
-    local root = _getRoot(); if not root then return nil end
-    local df = workspace.Map:FindFirstChild("Dungeon"); if not df then return nil end
-    local best, bd = nil, math.huge
-    for _, z in ipairs(df:GetChildren()) do
-        local zr = z:FindFirstChild("Root")
-        if zr and z:FindFirstChild("ExitTeleporter") then
-            local d = (zr.Position - root.Position).Magnitude
-            if d < bd then bd=d; best=z end
-        end
-    end
-    return best
-end
-
-local function _isShadowMob(n)
-    return string.find(n,"'s Shadow") or string.find(n,"Shadow")
-end
-
-local function _findShrine()
-    for _, e in ipairs(workspace.Enemies:GetChildren()) do
-        if e.Name=="Shrine" and e:FindFirstChild("Humanoid") and e:FindFirstChild("HumanoidRootPart") then
-            if e.Humanoid.Health > 0 then return e end
-        end
-    end
-end
-
-local function _getDungeonEnemies()
-    local list = {}
-    for _, e in ipairs(workspace.Enemies:GetChildren()) do
-        if e:FindFirstChild("Humanoid") and e:FindFirstChild("HumanoidRootPart") then
-            if e.Humanoid.Health > 0 and not _isShadowMob(e.Name) then
-                table.insert(list, e)
-            end
-        end
-    end
-    return list
-end
-
-local function _startDungeonFarm()
-    if _dungeonConn then _dungeonConn:Disconnect() end
-    if game.PlaceId ~= DungeonPlaceId then
-        Fluent:Notify({Title="Wrong Place", Content="Dungeon farm chỉ hoạt động trong Dungeon!", Duration=5})
-        return
-    end
-    _dungeonConn = _RS.Heartbeat:Connect(function()
-        if not getgenv().DR_FarmDungeon then return end
-        pcall(function()
-            local root = _getRoot(); if not root then return end
-            local zone = _getCurrentZone(); if not zone then return end
-            local exitTP = zone:FindFirstChild("ExitTeleporter"); if not exitTP then return end
-            local exitRoot = exitTP:FindFirstChild("Root"); if not exitRoot then return end
-            if exitRoot:FindFirstChild("BBG") then
-                _tweenObj(root, exitRoot.CFrame, getgenv().DR_FlySpeed)
-                task.wait(1); return
-            end
-            local shrine = _findShrine()
-            if shrine then
-                getgenv().DR_CurrentTarget = shrine
-                local cf = _getFarmCF(shrine)
-                if cf then _tweenObj(root, cf, getgenv().DR_FlySpeed) end
-                _attackEnemy(shrine); return
-            end
-            local enemies = _getDungeonEnemies()
-            if #enemies > 0 then
-                for _, e in ipairs(enemies) do
-                    if not getgenv().DR_FarmDungeon then break end
-                    if e.Humanoid.Health > 0 then
-                        if e.Name == "PropHitboxPlaceholder" then
-                            e.Humanoid.Health = 0
-                        else
-                            getgenv().DR_CurrentTarget = e
-                            local cf = _getFarmCF(e)
-                            if cf then _tweenObj(root, cf, getgenv().DR_FlySpeed) end
-                            _attackEnemy(e); break
-                        end
-                    end
-                end
-            else
-                getgenv().DR_CurrentTarget = nil
-                _tweenObj(root, exitRoot.CFrame, getgenv().DR_FlySpeed)
-            end
-        end)
-    end)
-end
-
-local function _stopDungeonFarm()
-    if _dungeonConn then _dungeonConn:Disconnect(); _dungeonConn=nil end
-    getgenv().DR_CurrentTarget = nil
-end
 
 --------------------------------------------------------------------
 -- ===== RAID LOGIC =====
