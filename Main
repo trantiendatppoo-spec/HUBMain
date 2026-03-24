@@ -3,6 +3,226 @@ if setfps then
     setfps(30)
 end
 
+-- =============================================
+--           KEY SYSTEM
+-- Hướng dẫn:
+-- 1. Tạo Pastebin mới tại https://pastebin.com
+-- 2. Mỗi dòng 1 key (ví dụ: MYKEY-ABC123)
+-- 3. Set Paste là "Unlisted" hoặc "Public"
+-- 4. Thay YOUR_PASTEBIN_ID bên dưới bằng ID của paste
+--    (ID là phần cuối URL: pastebin.com/XXXXXXXX)
+-- =============================================
+
+local KEY_SERVER = "https://bnhub.xyz"
+local LINK4SUB_ID = "JXxZ1euhh4"
+
+local function createKeyGUI()
+    local player = game:GetService("Players").LocalPlayer
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "KeySystemGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    -- Khung chính
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 320, 0, 210)
+    frame.Position = UDim2.new(0.5, -160, 0.5, -105)
+    frame.BackgroundColor3 = Color3.fromRGB(10, 20, 40)
+    frame.BorderSizePixel = 0
+    frame.Parent = screenGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+    -- Viền xanh biển
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(0, 150, 255)
+    stroke.Thickness = 2
+    stroke.Parent = frame
+
+    -- Nút X đóng
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 20, 0, 20)
+    closeBtn.Position = UDim2.new(1, -25, 0, 5)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.TextColor3 = Color3.fromRGB(150, 200, 255)
+    closeBtn.Text = "✕"
+    closeBtn.TextSize = 14
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Parent = frame
+    closeBtn.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+
+    -- Tiêu đề
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 38)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "🔑  BN HUB | KEY SYSTEM"
+    title.TextColor3 = Color3.fromRGB(0, 200, 255)
+    title.TextSize = 17
+    title.Font = Enum.Font.GothamBold
+    title.Parent = frame
+
+    -- Mô tả
+    local desc = Instance.new("TextLabel")
+    desc.Size = UDim2.new(1, -20, 0, 22)
+    desc.Position = UDim2.new(0, 10, 0, 38)
+    desc.BackgroundTransparency = 1
+    desc.Text = "Nhập key để tiếp tục sử dụng script"
+    desc.TextColor3 = Color3.fromRGB(120, 180, 220)
+    desc.TextSize = 12
+    desc.Font = Enum.Font.Gotham
+    desc.Parent = frame
+
+    -- Ô nhập key
+    local inputBox = Instance.new("TextBox")
+    inputBox.Size = UDim2.new(1, -20, 0, 34)
+    inputBox.Position = UDim2.new(0, 10, 0, 64)
+    inputBox.BackgroundColor3 = Color3.fromRGB(15, 30, 55)
+    inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    inputBox.PlaceholderText = "Nhập key vào đây..."
+    inputBox.PlaceholderColor3 = Color3.fromRGB(80, 120, 160)
+    inputBox.Text = ""
+    inputBox.TextSize = 13
+    inputBox.Font = Enum.Font.Gotham
+    inputBox.BorderSizePixel = 0
+    inputBox.ClearTextOnFocus = false
+    inputBox.Parent = frame
+    Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0, 6)
+    local iStroke = Instance.new("UIStroke")
+    iStroke.Color = Color3.fromRGB(0, 120, 200)
+    iStroke.Thickness = 1.5
+    iStroke.Parent = inputBox
+
+    -- Status label
+    local status = Instance.new("TextLabel")
+    status.Size = UDim2.new(1, -20, 0, 18)
+    status.Position = UDim2.new(0, 10, 0, 102)
+    status.BackgroundTransparency = 1
+    status.Text = ""
+    status.TextColor3 = Color3.fromRGB(255, 80, 80)
+    status.TextSize = 11
+    status.Font = Enum.Font.Gotham
+    status.Parent = frame
+
+    -- Nút lấy key
+    local getKeyBtn = Instance.new("TextButton")
+    getKeyBtn.Size = UDim2.new(1, -20, 0, 30)
+    getKeyBtn.Position = UDim2.new(0, 10, 0, 122)
+    getKeyBtn.BackgroundColor3 = Color3.fromRGB(0, 60, 120)
+    getKeyBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+    getKeyBtn.Text = "🔗 LẤY KEY (Link4Sub)"
+    getKeyBtn.TextSize = 12
+    getKeyBtn.Font = Enum.Font.GothamBold
+    getKeyBtn.BorderSizePixel = 0
+    getKeyBtn.Parent = frame
+    Instance.new("UICorner", getKeyBtn).CornerRadius = UDim.new(0, 6)
+    local gStroke = Instance.new("UIStroke")
+    gStroke.Color = Color3.fromRGB(0, 150, 255)
+    gStroke.Thickness = 1
+    gStroke.Parent = getKeyBtn
+    getKeyBtn.MouseButton1Click:Connect(function()
+        local link4subUrl = "https://link4sub.com/" .. LINK4SUB_ID
+        setclipboard(link4subUrl)
+        status.Text = "✅ Đã copy link! Dán vào trình duyệt."
+        status.TextColor3 = Color3.fromRGB(0, 229, 255)
+    end)
+
+    -- Nút xác nhận
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 34)
+    btn.Position = UDim2.new(0, 10, 0, 165)
+    btn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = "XÁC NHẬN"
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = frame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+    return screenGui, inputBox, btn, status
+end
+
+local function checkKey(inputKey)
+    local username = game:GetService("Players").LocalPlayer.Name
+    local ok, result = pcall(function()
+        return game:HttpGet(KEY_SERVER .. "/checkkey?key=" .. inputKey .. "&user=" .. username)
+    end)
+    if not ok or not result then return false, "Không kết nối được server!" end
+    local valid = result:find('"valid":true') ~= nil
+    local expired = result:find('"expired"') ~= nil
+    local wrong_user = result:find('"wrong_user"') ~= nil
+    if expired then return false, "Key đã hết hạn! Nhấn 'Lấy Key' để lấy key mới." end
+    if wrong_user then return false, "Key này đã được dùng bởi tài khoản khác!" end
+    if not valid then return false, "Key không hợp lệ!" end
+    return true, ""
+end
+
+local function openGetKeyLink()
+    local ok, result = pcall(function()
+        return game:HttpGet(KEY_SERVER .. "/gentoken")
+    end)
+    if not ok or not result then
+        statusLabel.Text = "❌ Không kết nối được server!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+        return
+    end
+    local url = result:match('"url":"([^"]+)"')
+    if not url then
+        statusLabel.Text = "❌ Lỗi tạo token!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+        return
+    end
+    local encoded = game:GetService("HttpService"):UrlEncode(url)
+    local link4subUrl = "https://link4sub.com/" .. LINK4SUB_ID .. "?r=" .. encoded
+    setclipboard(link4subUrl)
+    statusLabel.Text = "✅ Đã copy link vào clipboard!"
+    statusLabel.TextColor3 = Color3.fromRGB(0, 229, 255)
+end
+
+-- Chạy key system, block script cho đến khi đúng key
+local keyPassed = false
+local keyGui, inputBox, confirmBtn, statusLabel = createKeyGUI()
+
+local connection
+connection = confirmBtn.MouseButton1Click:Connect(function()
+    local inputKey = inputBox.Text
+    if inputKey == "" then
+        statusLabel.Text = "⚠ Vui lòng nhập key!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+        return
+    end
+    statusLabel.Text = "⏳ Đang kiểm tra key..."
+    statusLabel.TextColor3 = Color3.fromRGB(160, 160, 255)
+    confirmBtn.Active = false
+
+    task.spawn(function()
+        local valid, reason = checkKey(inputKey)
+        if valid then
+            statusLabel.Text = "✅ Key hợp lệ! Đang tải..."
+            statusLabel.TextColor3 = Color3.fromRGB(80, 255, 120)
+            task.wait(1)
+            keyGui:Destroy()
+            connection:Disconnect()
+            keyPassed = true
+        else
+            statusLabel.Text = "❌ " .. (reason or "Key không hợp lệ!")
+            statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
+            confirmBtn.Active = true
+        end
+    end)
+end)
+
+-- Block toàn bộ script cho đến khi key đúng
+repeat task.wait(0.1) until keyPassed
+
+-- =============================================
+--        HẾT KEY SYSTEM - SCRIPT CHẠY TỪ ĐÂY
+-- =============================================
+
 -- Auto chọn phe Hải Quân khi vào game
 spawn(function()
     local player = game:GetService("Players").LocalPlayer
@@ -3152,6 +3372,59 @@ local function _farmGetAllInRange(maxDist)
     return list
 end
 
+local _upsideDownPos = nil -- vị trí cố định khi bật mode lộn ngược
+local _upsideDownConn = nil
+
+local function startUpsideDownFarm()
+    if _upsideDownConn then _upsideDownConn:Disconnect() end
+    local root = _farmGetRoot()
+    if not root then return end
+
+    -- Lưu vị trí hiện tại, bay lên cao 80 studs rồi lộn ngược
+    local p = root.Position + Vector3.new(0, 80, 0)
+    -- CFrame lộn ngược: UpVector hướng xuống đất
+    _upsideDownPos = CFrame.new(p, p + Vector3.new(0, -1, 0))
+        * CFrame.Angles(math.pi, 0, 0)
+    root.CFrame = _upsideDownPos
+
+    _upsideDownConn = game:GetService("RunService").Heartbeat:Connect(function()
+        if not getgenv().AutoFarmNearest or not getgenv().UpsideDownMode then return end
+        pcall(function()
+            local r = _farmGetRoot()
+            if not r then return end
+
+            -- Giữ nhân vật đứng yên lộn ngược
+            r.CFrame = _upsideDownPos
+
+            -- Kéo tất cả mob trong range về chỗ mình
+            local myPos = _upsideDownPos.Position
+            for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                    local d = (mob.HumanoidRootPart.Position - myPos).Magnitude
+                    if d <= (getgenv().NearestFarmRange or 2000) then
+                        pcall(function()
+                            mob.HumanoidRootPart.CanCollide = false
+                            mob.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                            mob.HumanoidRootPart.CFrame = CFrame.new(myPos + Vector3.new(0, -10, 0))
+                            if mob.Head then mob.Head.CanCollide = false end
+                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                        end)
+                        _farmAttack(mob)
+                    end
+                end
+            end
+        end)
+    end)
+end
+
+local function stopUpsideDownFarm()
+    if _upsideDownConn then _upsideDownConn:Disconnect(); _upsideDownConn = nil end
+    _upsideDownPos = nil
+    getgenv().UpsideDownMode = false
+end
+
+getgenv().UpsideDownMode = false
+
 local function startNearestFarm()
     if nearestFarmConn then nearestFarmConn:Disconnect() end
     nearestFarmConn = game:GetService("RunService").Heartbeat:Connect(function()
@@ -3397,6 +3670,19 @@ Toggle:OnChanged(function(Value)
     getgenv().AutoFarmNearest = Value
     if not Value then
         if _farmActiveTween then _farmActiveTween:Cancel(); _farmActiveTween = nil end
+        stopUpsideDownFarm()
+    end
+end)
+
+Toggle = Tabs.Farming:AddToggle("ToggleUpsideDown", { Title = "Upside Down Farm (Đầu xuống đất)", Default = false })
+Toggle:OnChanged(function(Value)
+    getgenv().UpsideDownMode = Value
+    if Value then
+        if getgenv().AutoFarmNearest then
+            startUpsideDownFarm()
+        end
+    else
+        stopUpsideDownFarm()
     end
 end)
 -- ===================================
