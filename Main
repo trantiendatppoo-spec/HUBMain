@@ -3372,58 +3372,8 @@ local function _farmGetAllInRange(maxDist)
     return list
 end
 
-local _upsideDownPos = nil -- vị trí cố định khi bật mode lộn ngược
-local _upsideDownConn = nil
-
-local function startUpsideDownFarm()
-    if _upsideDownConn then _upsideDownConn:Disconnect() end
-    local root = _farmGetRoot()
-    if not root then return end
-
-    -- Lưu vị trí hiện tại, bay lên cao 80 studs rồi lộn ngược
-    local p = root.Position + Vector3.new(0, 80, 0)
-    -- CFrame lộn ngược: UpVector hướng xuống đất
-    _upsideDownPos = CFrame.new(p, p + Vector3.new(0, -1, 0))
-        * CFrame.Angles(math.pi, 0, 0)
-    root.CFrame = _upsideDownPos
-
-    _upsideDownConn = game:GetService("RunService").Heartbeat:Connect(function()
-        if not getgenv().AutoFarmNearest or not getgenv().UpsideDownMode then return end
-        pcall(function()
-            local r = _farmGetRoot()
-            if not r then return end
-
-            -- Giữ nhân vật đứng yên lộn ngược
-            r.CFrame = _upsideDownPos
-
-            -- Kéo tất cả mob trong range về chỗ mình
-            local myPos = _upsideDownPos.Position
-            for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
-                    local d = (mob.HumanoidRootPart.Position - myPos).Magnitude
-                    if d <= (getgenv().NearestFarmRange or 2000) then
-                        pcall(function()
-                            mob.HumanoidRootPart.CanCollide = false
-                            mob.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
-                            mob.HumanoidRootPart.CFrame = CFrame.new(myPos + Vector3.new(0, -10, 0))
-                            if mob.Head then mob.Head.CanCollide = false end
-                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-                        end)
-                        _farmAttack(mob)
-                    end
-                end
-            end
-        end)
-    end)
 end
 
-local function stopUpsideDownFarm()
-    if _upsideDownConn then _upsideDownConn:Disconnect(); _upsideDownConn = nil end
-    _upsideDownPos = nil
-    getgenv().UpsideDownMode = false
-end
-
-getgenv().UpsideDownMode = false
 
 local function startNearestFarm()
     if nearestFarmConn then nearestFarmConn:Disconnect() end
@@ -3670,21 +3620,9 @@ Toggle:OnChanged(function(Value)
     getgenv().AutoFarmNearest = Value
     if not Value then
         if _farmActiveTween then _farmActiveTween:Cancel(); _farmActiveTween = nil end
-        stopUpsideDownFarm()
     end
 end)
 
-Toggle = Tabs.Farming:AddToggle("ToggleUpsideDown", { Title = "Upside Down Farm (Đầu xuống đất)", Default = false })
-Toggle:OnChanged(function(Value)
-    getgenv().UpsideDownMode = Value
-    if Value then
-        if getgenv().AutoFarmNearest then
-            startUpsideDownFarm()
-        end
-    else
-        stopUpsideDownFarm()
-    end
-end)
 -- ===================================
 Tabs.Farming:AddParagraph({
      Title = "Farming Material",
@@ -6411,6 +6349,37 @@ Toggle = Tabs.Sea:AddToggle("Toggle61", {Title = "Auto Penetrate Rocks When Boat
 Toggle:OnChanged(function(Value)
     pcall(function() getgenv().GoThroughRocks = Value end)
 end)
+
+Toggle = Tabs.Sea:AddToggle("ToggleSkipEnemy", {Title = "Skip Enemy", Default = true})
+Toggle:OnChanged(function(Value)
+    getgenv().SkipEnemy = Value
+end)
+getgenv().SkipEnemy = true
+
+Toggle = Tabs.Sea:AddToggle("ToggleBoatNoclip", {Title = "Noclip Boat", Default = true})
+Toggle:OnChanged(function(Value)
+    getgenv().BoatNoclip = Value
+end)
+getgenv().BoatNoclip = true
+
+-- Loop noclip boat
+spawn(function()
+    while task.wait(0.5) do
+        if getgenv().BoatNoclip then
+            pcall(function()
+                for _, boat in pairs(game:GetService("Workspace").Boats:GetChildren()) do
+                    if boat:FindFirstChild("MyBoatEsp") then
+                        for _, part in pairs(boat:GetDescendants()) do
+                            if part:IsA("BasePart") then
+                                part.CanCollide = false
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
 spawn(function()
     while task.wait(1) do
         if getgenv().GoThroughRocks or getgenv().SailBoat then
@@ -6552,37 +6521,66 @@ spawn(function()
                     for i, v in pairs(game:GetService("Workspace").Boats:GetChildren()) do
                         if v.Name == getgenv().SelectedBoat then
                             if v:FindFirstChild("MyBoatEsp") then
-                                if game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Sit == false then
-                                    if ((CheckShark() and getgenv().AutoKillShark)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("Terrorshark") and getgenv().AutoTerrorshark)
+                                local enemies = game:GetService("Workspace").Enemies
+
+                                -- Kiểm tra có enemy cần đánh không (toggle bật)
+                                local function hasActiveEnemy()
+                                    return (CheckShark() and getgenv().AutoKillShark)
+                                        or (enemies:FindFirstChild("Terrorshark") and getgenv().AutoTerrorshark)
                                         or (CheckPiranha() and getgenv().AutoKillPiranha)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("Fish Crew Member") and getgenv().AutoKillFishCrew)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("FishBoat") and getgenv().RelzFishBoat)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("PirateBrigade") and getgenv().RelzPirateBrigade)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("PirateGrandBrigade") and getgenv().RelzPirateGrandBrigade)
-                                        or (CheckSeaBeast() and getgenv().AutoSeaBest)) then
+                                        or (enemies:FindFirstChild("Fish Crew Member") and getgenv().AutoKillFishCrew)
+                                        or (enemies:FindFirstChild("FishBoat") and getgenv().RelzFishBoat)
+                                        or (enemies:FindFirstChild("PirateBrigade") and getgenv().RelzPirateBrigade)
+                                        or (enemies:FindFirstChild("PirateGrandBrigade") and getgenv().RelzPirateGrandBrigade)
+                                        or (CheckSeaBeast() and getgenv().AutoSeaBest)
+                                end
+
+                                -- Kiểm tra có enemy xuất hiện nhưng toggle TẮT (cần né)
+                                local function hasIgnoredEnemy()
+                                    return (enemies:FindFirstChild("FishBoat") and not getgenv().RelzFishBoat)
+                                        or (enemies:FindFirstChild("PirateBrigade") and not getgenv().RelzPirateBrigade)
+                                        or (enemies:FindFirstChild("PirateGrandBrigade") and not getgenv().RelzPirateGrandBrigade)
+                                        or (enemies:FindFirstChild("Terrorshark") and not getgenv().AutoTerrorshark)
+                                        or (CheckSeaBeast() and not getgenv().AutoSeaBest)
+                                end
+
+                                if game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Sit == false then
+                                    if hasActiveEnemy() then
                                         if stoppos then stoppos:Stop() end
                                     else
                                         stoppos = topos(v.VehicleSeat.CFrame * CFrame.new(0, 1, 0))
                                     end
                                 else
-                                    repeat
-                                        wait()
-                                        stopboat = TPB(CFrameSelectedZone, v.VehicleSeat)
-                                    until ((CheckShark() and getgenv().AutoKillShark)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("Terrorshark") and getgenv().AutoTerrorshark)
-                                        or (CheckPiranha() and getgenv().AutoKillPiranha)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("Fish Crew Member") and getgenv().AutoKillFishCrew)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("FishBoat") and getgenv().RelzFishBoat)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("PirateBrigade") and getgenv().RelzPirateBrigade)
-                                        or (game:GetService("Workspace").Enemies:FindFirstChild("PirateGrandBrigade") and getgenv().RelzPirateGrandBrigade)
-                                        or (CheckSeaBeast() and getgenv().AutoSeaBest))
-                                        or game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Sit == false
-                                        or getgenv().SailBoat == false
-                                    if stopboat then stopboat:Stop() end
-                                    game:GetService("VirtualInputManager"):SendKeyEvent(true, 32, false, game)
-                                    wait(0.1)
-                                    game:GetService("VirtualInputManager"):SendKeyEvent(false, 32, false, game)
+                                    -- Nếu gặp enemy toggle TẮT → nâng thuyền lên cao né qua
+                                    if hasIgnoredEnemy() and not hasActiveEnemy() then
+                                        pcall(function()
+                                            -- Noclip thuyền
+                                            for _, part in pairs(v:GetDescendants()) do
+                                                if part:IsA("BasePart") then part.CanCollide = false end
+                                            end
+                                            -- Bay lên cao 300 studs rồi tiếp tục đi
+                                            local seat = v.VehicleSeat
+                                            local flyUp = CFrame.new(seat.Position + Vector3.new(0, 300, 0))
+                                            local ts = game:GetService("TweenService")
+                                            local tw = ts:Create(seat, TweenInfo.new(2, Enum.EasingStyle.Linear), {CFrame = flyUp})
+                                            tw:Play()
+                                            tw.Completed:Wait()
+                                            -- Chờ enemy biến mất hoặc có enemy cần đánh
+                                            local t = tick()
+                                            repeat task.wait(0.5) until not hasIgnoredEnemy() or hasActiveEnemy() or tick()-t > 15 or not getgenv().SailBoat
+                                        end)
+                                    else
+                                        repeat
+                                            wait()
+                                            stopboat = TPB(CFrameSelectedZone, v.VehicleSeat)
+                                        until hasActiveEnemy()
+                                            or game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Sit == false
+                                            or getgenv().SailBoat == false
+                                        if stopboat then stopboat:Stop() end
+                                        game:GetService("VirtualInputManager"):SendKeyEvent(true, 32, false, game)
+                                        wait(0.1)
+                                        game:GetService("VirtualInputManager"):SendKeyEvent(false, 32, false, game)
+                                    end
                                 end
                             end
                         end
@@ -9000,6 +8998,210 @@ Toggle = Tabs.PVP:AddToggle("Toggle127", {Title = "Auto Aimbot Gun", Default = f
 Toggle:OnChanged(function(Value)
     getgenv().AimbotGun = Value
 end)
+
+-- Aimbot Nearest (tự động aim vào player gần nhất địch team)
+local _aimNearestConn = nil
+getgenv().AimNearest = false
+getgenv().Aim_Players = nil
+
+-- Highlight instance để hiển thị target
+local _aimHighlight = nil
+local _aimBeamPart = nil  -- part phụ để làm beam
+local _aimBeam = nil
+
+local function _removeHighlight()
+    if _aimHighlight and _aimHighlight.Parent then _aimHighlight:Destroy() end
+    _aimHighlight = nil
+    if _aimBeam and _aimBeam.Parent then _aimBeam:Destroy() end
+    _aimBeam = nil
+    if _aimBeamPart and _aimBeamPart.Parent then _aimBeamPart:Destroy() end
+    _aimBeamPart = nil
+end
+
+local function _setHighlight(char)
+    _removeHighlight()
+    if not char then return end
+    -- Highlight đỏ
+    local hl = Instance.new("Highlight")
+    hl.FillColor = Color3.fromRGB(255, 0, 0)
+    hl.OutlineColor = Color3.fromRGB(255, 50, 50)
+    hl.FillTransparency = 0.5
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = char
+    _aimHighlight = hl
+
+    -- Tia laser từ nhân vật mình đến target
+    pcall(function()
+        local lp = game:GetService("Players").LocalPlayer
+        local myHRP = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
+        local targetHRP = char:FindFirstChild("HumanoidRootPart")
+        if not myHRP or not targetHRP then return end
+
+        -- Tạo part phụ attach vào target
+        local bp = Instance.new("Part")
+        bp.Size = Vector3.new(0.1, 0.1, 0.1)
+        bp.Transparency = 1
+        bp.CanCollide = false
+        bp.Anchored = false
+        bp.Parent = workspace
+        local w = Instance.new("Weld")
+        w.Part0 = targetHRP
+        w.Part1 = bp
+        w.Parent = bp
+        _aimBeamPart = bp
+
+        -- Attachment
+        local a0 = Instance.new("Attachment")
+        a0.Parent = myHRP
+        local a1 = Instance.new("Attachment")
+        a1.Parent = bp
+
+        -- Beam
+        local beam = Instance.new("Beam")
+        beam.Attachment0 = a0
+        beam.Attachment1 = a1
+        beam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0))
+        beam.Width0 = 0.15
+        beam.Width1 = 0.15
+        beam.FaceCamera = true
+        beam.Transparency = NumberSequence.new(0.2)
+        beam.LightEmission = 1
+        beam.Segments = 1
+        beam.Parent = myHRP
+        _aimBeam = beam
+    end)
+end
+
+local function _findNearestEnemy()
+    local lp = game:GetService("Players").LocalPlayer
+    if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return nil end
+    local nearest, nd = nil, math.huge
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v ~= lp and v.Character
+        and v.Character:FindFirstChild("HumanoidRootPart")
+        and v.Character:FindFirstChild("Humanoid")
+        and v.Character.Humanoid.Health > 0
+        and v.Team ~= lp.Team
+        and v.Team.Name ~= "Marines" then
+            local d = (lp.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+            if d < nd then nd = d; nearest = v end
+        end
+    end
+    return nearest
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if getgenv().AimNearest then
+        local target = _findNearestEnemy()
+        if target then
+            getgenv().Aim_Players = target
+            -- Highlight target
+            if target.Character and (not _aimHighlight or _aimHighlight.Parent ~= target.Character) then
+                _setHighlight(target.Character)
+            end
+        else
+            getgenv().Aim_Players = nil
+            _removeHighlight()
+        end
+    else
+        getgenv().Aim_Players = nil
+        _removeHighlight()
+    end
+end)
+
+-- Hook namecall cho Aimbot Nearest
+pcall(function()
+    local mt = getrawmetatable(game)
+    local old = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(...)
+        local method = getnamecallmethod()
+        local args = {...}
+        -- Aimbot nearest player
+        if tostring(method) == "FireServer"
+        and tostring(args[1]) == "RemoteEvent"
+        and tostring(args[2]) ~= "true"
+        and tostring(args[2]) ~= "false"
+        and getgenv().AimNearest
+        and getgenv().Aim_Players
+        and getgenv().Aim_Players.Character
+        and getgenv().Aim_Players.Character:FindFirstChild("HumanoidRootPart") then
+            args[2] = getgenv().Aim_Players.Character.HumanoidRootPart.Position
+            return old(unpack(args))
+        end
+        return old(...)
+    end)
+    setreadonly(mt, true)
+end)
+
+Toggle = Tabs.PVP:AddToggle("ToggleAimNearest", {Title = "Aimbot Nearest Enemy", Default = false})
+Toggle:OnChanged(function(Value)
+    getgenv().AimNearest = Value
+    if not Value then _removeHighlight() end
+end)
+
+-- ===== BUDDY SWORD (Auto kill Cake Queen để lấy Buddy Sword) =====
+local BuddySwordPos = CFrame.new(-731.2034, 381.5658, -11198.4951)
+getgenv().BudySword = false
+getgenv().BudySwordHop = false
+
+spawn(function()
+    while task.wait(0.1) do
+        if getgenv().BudySword and World3 then
+            pcall(function()
+                local enemies = game:GetService("Workspace").Enemies
+                local cakeQueen = enemies:FindFirstChild("Cake Queen")
+                if cakeQueen then
+                    for _, v in pairs(enemies:GetChildren()) do
+                        if v.Name == "Cake Queen" and v:FindFirstChild("Humanoid")
+                        and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                            repeat
+                                task.wait(0.05)
+                                AutoHaki()
+                                EquipWeapon(getgenv().SelectWeapon)
+                                v.HumanoidRootPart.CanCollide = false
+                                v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                                v.Humanoid.WalkSpeed = 0
+                                -- Kéo quái về chỗ mình
+                                v.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
+                                sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                                -- Attack bằng Combat remote
+                                pcall(function()
+                                    game:GetService("ReplicatedStorage").Remotes.Combat:FireServer(v)
+                                end)
+                                -- Click thêm để đánh
+                                game:GetService("VirtualUser"):CaptureController()
+                                game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                                task.wait(0.05)
+                                game:GetService("VirtualUser"):Button1Up(Vector2.new(1280, 672))
+                            until not getgenv().BudySword or not v.Parent or v.Humanoid.Health <= 0
+                        end
+                    end
+                else
+                    topos(BuddySwordPos)
+                    local rs = game:GetService("ReplicatedStorage")
+                    if rs:FindFirstChild("Cake Queen") then
+                        topos(rs:FindFirstChild("Cake Queen").HumanoidRootPart.CFrame * CFrame.new(2, 20, 2))
+                    elseif getgenv().BudySwordHop then
+                        Hop()
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+Tabs.Item:AddParagraph({Title = "Buddy Sword", Content = ""})
+Toggle = Tabs.Item:AddToggle("ToggleBudySword", {Title = "Auto Buddy Sword", Default = false})
+Toggle:OnChanged(function(Value)
+    getgenv().BudySword = Value
+    StopTween(getgenv().BudySword)
+end)
+Toggle = Tabs.Item:AddToggle("ToggleBudySwordHop", {Title = "Hop Server (No Cake Queen)", Default = false})
+Toggle:OnChanged(function(Value)
+    getgenv().BudySwordHop = Value
+end)
 spawn(function()
     while task.wait(0.1) do
         if getgenv().AimbotGun and SelectWeaponGun then
@@ -9191,148 +9393,3 @@ TextButton.MouseButton1Click:Connect(function()
     task.wait(0.05)
     VIM:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
 end)
---------------------------------------------------------------------
---// ================= DUNGEON & RAID MODULE (FROM TOPI HUB) =================
---------------------------------------------------------------------
-
-do -- scope để tránh conflict biến
-local _RS  = game:GetService("RunService")
-local _TS  = game:GetService("TweenService")
-local _Rep = game:GetService("ReplicatedStorage")
-local _pl  = game:GetService("Players").LocalPlayer
-
---------------------------------------------------------------------
--- ===== RAID LOGIC =====
---------------------------------------------------------------------
-local _raidConn = nil
-
-local function _getBP(name)
-    for _, v in pairs(_pl.Backpack:GetChildren()) do if v.Name==name then return true end end
-    for _, v in pairs(_pl.Character and _pl.Character:GetChildren() or {}) do if v.Name==name then return true end end
-    return false
-end
-
-local function _isRaidMob(mob)
-    local n = mob.Name:lower()
-    if n:find("raid") or n:find("microchip") or n:find("island") then return true end
-    if mob:GetAttribute("IsRaid") or mob:GetAttribute("RaidMob") or mob:GetAttribute("IsBoss") then return true end
-    local h = mob:FindFirstChild("Humanoid")
-    if h and h.WalkSpeed==0 then return true end
-    if mob.Parent and tostring(mob.Parent):lower():find("_worldorigin") then return true end
-    return false
-end
-
-local function _isInRaid()
-    local ok, r = pcall(function() return _pl.PlayerGui.Main.TopHUDList.RaidTimer.Visible end)
-    return ok and r == true
-end
-
-local function _isIslandRaid(cu)
-    local ok, locs = pcall(function() return workspace["_WorldOrigin"].Locations end)
-    if not ok or not locs then return nil end
-    local best, bd = nil, math.huge
-    for _, v in ipairs(locs:GetChildren()) do
-        if v.Name == "Island "..cu then
-            local r = _getRoot()
-            if r then
-                local d = (v.Position - r.Position).Magnitude
-                if d < bd then bd=d; best=v end
-            end
-        end
-    end
-    if best and bd <= 4500 then return best end
-end
-
-local function _getNextRaidIsland()
-    for _, id in ipairs({5,4,3,2,1}) do
-        local i = _isIslandRaid(id)
-        if i then return i end
-    end
-end
-
-local function _startAutoRaid()
-    task.spawn(function()
-        while getgenv().DR_AutoRaid do
-            pcall(function()
-                -- Bước 1: Mua chip
-                if not _isInRaid() and not _getBP("Special Microchip") then
-                    pcall(function()
-                        _Rep.Remotes.CommF_:InvokeServer("RaidsNpc","Select", getgenv().DR_SelectChip or "Ice")
-                    end)
-                    if not _getBP("Special Microchip") then
-                        pcall(function()
-                            local fruits = _Rep.Remotes.CommF_:InvokeServer("GetFruits")
-                            for _, d in pairs(fruits or {}) do
-                                if _getBP("Special Microchip") then break end
-                                local rar = tostring(d.Rarity or ""):lower()
-                                if (d.Price or 0)<=1150000 or rar=="common" or rar=="uncommon" or rar=="rare" then
-                                    _Rep.Remotes.CommF_:InvokeServer("LoadFruit", d.Name)
-                                    _Rep.Remotes.CommF_:InvokeServer("RaidsNpc","Select", getgenv().DR_SelectChip or "Ice")
-                                end
-                            end
-                        end)
-                    end
-                    task.wait(0.5)
-                end
-                -- Bước 2: Start Raid
-                if not _isInRaid() and _getBP("Special Microchip") then
-                    if _World2 then
-                        _tp(CFrame.new(-6438.73535,250.645355,-4501.50684))
-                        task.wait(0.3)
-                        pcall(function() fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector) end)
-                    elseif _World3 then
-                        pcall(function()
-                            _Rep.Remotes.CommF_:InvokeServer("requestEntrance",
-                                Vector3.new(-5097.93164,316.447021,-3142.66602,-0.405007899,-4.31682743e-08,0.914313197,-1.90943332e-08,1,3.8755779e-08,-0.914313197,-1.76180437e-09,-0.405007899))
-                        end)
-                        task.wait(0.3)
-                        pcall(function() fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector) end)
-                    end
-                    local dl = tick()+30
-                    repeat task.wait(0.5) until _isInRaid() or tick()>dl or not getgenv().DR_AutoRaid
-                    if not getgenv().DR_AutoRaid then return end
-                    task.wait(1)
-                end
-                -- Bước 3: Farm trong raid
-                if _isInRaid() then
-                    if _raidConn then _raidConn:Disconnect(); _raidConn=nil end
-                    local _raidLastTick = 0
-                    _raidConn = _RS.Heartbeat:Connect(function()
-                        if tick() - _raidLastTick < 0.1 then return end -- throttle 10 lần/giây thay vì mỗi frame
-                        _raidLastTick = tick()
-                        if not getgenv().DR_AutoRaid then return end
-                        if not _isInRaid() then
-                            if _raidConn then _raidConn:Disconnect(); _raidConn=nil end
-                            getgenv().DR_CurrentTarget = nil; return
-                        end
-                        local root = _getRoot(); if not root then return end
-                        local nearest, nd = nil, math.huge
-                        for _, mob in pairs(workspace.Enemies:GetChildren()) do
-                            if mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart")
-                            and mob.Humanoid.Health>0 and not _isRaidMob(mob) then
-                                local d = (mob.HumanoidRootPart.Position - root.Position).Magnitude
-                                if d<=2000 and d<nd then nd=d; nearest=mob end
-                            end
-                        end
-                        getgenv().DR_CurrentTarget = nearest
-                        if nearest then
-                            local cf = _getFarmCF(nearest)
-                            if cf then _tweenObj(root, cf, getgenv().DR_FlySpeed) end
-                            _attackEnemy(nearest)
-                        else
-                            local ni = _getNextRaidIsland()
-                            if ni then _tweenObj(root, ni.CFrame * CFrame.new(0,50,0), getgenv().DR_FlySpeed) end
-                        end
-                    end)
-                    repeat task.wait(1) until not _isInRaid() or not getgenv().DR_AutoRaid
-                    if _raidConn then _raidConn:Disconnect(); _raidConn=nil end
-                    getgenv().DR_CurrentTarget = nil
-                end
-            end)
-            task.wait(1)
-        end
-    end)
-end
-
-
-end -- end do scope
