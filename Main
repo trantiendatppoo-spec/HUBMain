@@ -45,7 +45,7 @@ local function createKeyGUI()
     closeBtn.Position = UDim2.new(1, -25, 0, 5)
     closeBtn.BackgroundTransparency = 1
     closeBtn.TextColor3 = Color3.fromRGB(150, 200, 255)
-    closeBtn.Text = "✕"
+    closeBtn.Text = ""
     closeBtn.TextSize = 14
     closeBtn.Font = Enum.Font.GothamBold
     closeBtn.BorderSizePixel = 0
@@ -59,7 +59,7 @@ local function createKeyGUI()
     title.Size = UDim2.new(1, 0, 0, 38)
     title.Position = UDim2.new(0, 0, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "🔑  BN HUB | KEY SYSTEM"
+    title.Text = "BN HUB | KEY SYSTEM"
     title.TextColor3 = Color3.fromRGB(0, 200, 255)
     title.TextSize = 17
     title.Font = Enum.Font.GothamBold
@@ -113,7 +113,7 @@ local function createKeyGUI()
     getKeyBtn.Position = UDim2.new(0, 10, 0, 122)
     getKeyBtn.BackgroundColor3 = Color3.fromRGB(0, 60, 120)
     getKeyBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
-    getKeyBtn.Text = "🔗 LẤY KEY (Link4Sub)"
+    getKeyBtn.Text = "LẤY KEY (Link4Sub)"
     getKeyBtn.TextSize = 12
     getKeyBtn.Font = Enum.Font.GothamBold
     getKeyBtn.BorderSizePixel = 0
@@ -126,7 +126,7 @@ local function createKeyGUI()
     getKeyBtn.MouseButton1Click:Connect(function()
         local link4subUrl = "https://link4sub.com/" .. LINK4SUB_ID
         setclipboard(link4subUrl)
-        status.Text = "✅ Đã copy link! Dán vào trình duyệt."
+        status.Text = "Đã copy link! Dán vào trình duyệt."
         status.TextColor3 = Color3.fromRGB(0, 229, 255)
     end)
 
@@ -166,20 +166,20 @@ local function openGetKeyLink()
         return game:HttpGet(KEY_SERVER .. "/gentoken")
     end)
     if not ok or not result then
-        statusLabel.Text = "❌ Không kết nối được server!"
+        statusLabel.Text = "Không kết nối được server!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
         return
     end
     local url = result:match('"url":"([^"]+)"')
     if not url then
-        statusLabel.Text = "❌ Lỗi tạo token!"
+        statusLabel.Text = "Lỗi tạo token!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
         return
     end
     local encoded = game:GetService("HttpService"):UrlEncode(url)
     local link4subUrl = "https://link4sub.com/" .. LINK4SUB_ID .. "?r=" .. encoded
     setclipboard(link4subUrl)
-    statusLabel.Text = "✅ Đã copy link vào clipboard!"
+    statusLabel.Text = "Đã copy link vào clipboard!"
     statusLabel.TextColor3 = Color3.fromRGB(0, 229, 255)
 end
 
@@ -191,7 +191,7 @@ local connection
 connection = confirmBtn.MouseButton1Click:Connect(function()
     local inputKey = inputBox.Text
     if inputKey == "" then
-        statusLabel.Text = "⚠ Vui lòng nhập key!"
+        statusLabel.Text = "Vui lòng nhập key!"
         statusLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         return
     end
@@ -202,14 +202,14 @@ connection = confirmBtn.MouseButton1Click:Connect(function()
     task.spawn(function()
         local valid, reason = checkKey(inputKey)
         if valid then
-            statusLabel.Text = "✅ Key hợp lệ! Đang tải..."
+            statusLabel.Text = "Key hợp lệ! Đang tải..."
             statusLabel.TextColor3 = Color3.fromRGB(80, 255, 120)
             task.wait(1)
             keyGui:Destroy()
             connection:Disconnect()
             keyPassed = true
         else
-            statusLabel.Text = "❌ " .. (reason or "Key không hợp lệ!")
+            statusLabel.Text = "" .. (reason or "Key không hợp lệ!")
             statusLabel.TextColor3 = Color3.fromRGB(255, 80, 80)
             confirmBtn.Active = true
         end
@@ -1700,23 +1700,23 @@ Tabs = {
 
 -- ===== TAB INFO =====
 Tabs.Info:AddParagraph({
-    Title = "🌟 BN HUB",
+    Title = "BN HUB",
     Content = "Script được phát triển bởi PhanThanh"
 })
 Tabs.Info:AddParagraph({
-    Title = "👑 Owner",
+    Title = "Owner",
     Content = "PhanThanh"
 })
 Tabs.Info:AddParagraph({
-    Title = "💬 Discord Owner",
+    Title = "Discord Owner",
     Content = "p_thanhdepzai"
 })
 Tabs.Info:AddParagraph({
-    Title = "🎮 Server Discord",
+    Title = "Server Discord",
     Content = "https://discord.gg/zzzkqzxNg8"
 })
 Tabs.Info:AddParagraph({
-    Title = "🎵 TikTok Owner",
+    Title = "TikTok Owner",
     Content = "https://www.tiktok.com/@phanthanhsilkronxhub"
 })
 Tabs.Info:AddButton({
@@ -2067,7 +2067,7 @@ spawn(function()
         while true do
             wait(1)
             local mirageIslandExists = game.Workspace._WorldOrigin.Locations:FindFirstChild('Mirage Island') ~= nil
-            local currentStatus = mirageIslandExists and '✅️' or '❌️'
+            local currentStatus = mirageIslandExists and '' or ''
             if currentStatus ~= previousStatus then
                 Miragecheck:SetDesc('Status: ' .. currentStatus)
                 previousStatus = currentStatus
@@ -2082,7 +2082,7 @@ Kitsunecheck = Tabs.Server:AddParagraph({
 spawn(function()
     local previousStatus = ""
     while task.wait(1) do
-        local currentStatus = game:GetService("Workspace").Map:FindFirstChild("KitsuneIsland") and '✅️' or '❌️'
+        local currentStatus = game:GetService("Workspace").Map:FindFirstChild("KitsuneIsland") and '' or ''
         if currentStatus ~= previousStatus then
             Kitsunecheck:SetDesc('Status: ' .. currentStatus)
             previousStatus = currentStatus
@@ -2096,7 +2096,7 @@ CPrehistoriccheck = Tabs.Server:AddParagraph({
 task.spawn(function()
     local previousStatus = ""
     while task.wait(1) do
-        local currentStatus = game.Workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island") and '✅️' or '❌️'
+        local currentStatus = game.Workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island") and '' or ''
         if currentStatus ~= previousStatus then
             CPrehistoriccheck:SetDesc("Status: " .. currentStatus)
             previousStatus = currentStatus
@@ -2110,7 +2110,7 @@ FrozenIsland = Tabs.Server:AddParagraph({
 spawn(function()
     local previousStatus = ""
     while wait(1) do
-        local currentStatus = game.Workspace._WorldOrigin.Locations:FindFirstChild('Frozen Dimension') and '✅️' or '❌️'
+        local currentStatus = game.Workspace._WorldOrigin.Locations:FindFirstChild('Frozen Dimension') and '' or ''
         if currentStatus ~= previousStatus then
             FrozenIsland:SetDesc('Status: ' .. currentStatus)
             previousStatus = currentStatus
@@ -2124,7 +2124,7 @@ MobCakePrince = Tabs.Server:AddParagraph({
 spawn(function()
     while wait(1) do
         local cakePrince = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-        local killStatus = "Cake Prince: ✅️"
+        local killStatus = "Cake Prince: "
         if string.len(cakePrince) >= 86 then
             local killCount = string.sub(cakePrince, 39, 41)
             killStatus = "Kill: " .. killCount
@@ -2139,7 +2139,7 @@ CheckRip = Tabs.Server:AddParagraph({
 spawn(function()
     local previousStatus = ""
     while wait(1) do
-        local currentStatus = game:GetService("ReplicatedStorage"):FindFirstChild("rip_indra True Form") or game:GetService("Workspace").Enemies:FindFirstChild("rip_indra") and '✅️' or '❌️'
+        local currentStatus = game:GetService("ReplicatedStorage"):FindFirstChild("rip_indra True Form") or game:GetService("Workspace").Enemies:FindFirstChild("rip_indra") and '' or ''
         if currentStatus ~= previousStatus then
             CheckRip:SetDesc("Status: " .. currentStatus)
             previousStatus = currentStatus
@@ -2153,7 +2153,7 @@ CheckDoughKing = Tabs.Server:AddParagraph({
 spawn(function()
     local previousStatus = ""
     while wait(1) do
-        local currentStatus = game:GetService("ReplicatedStorage"):FindFirstChild("Dough King") or game:GetService("Workspace").Enemies:FindFirstChild("Dough King") and '✅️' or '❌️'
+        local currentStatus = game:GetService("ReplicatedStorage"):FindFirstChild("Dough King") or game:GetService("Workspace").Enemies:FindFirstChild("Dough King") and '' or ''
         if currentStatus ~= previousStatus then
             CheckDoughKing:SetDesc("Status: " .. currentStatus)
             previousStatus = currentStatus
@@ -2167,7 +2167,7 @@ EliteHunter = Tabs.Server:AddParagraph({
 spawn(function()
     local previousStatus = ""
     while wait(1) do
-        local currentStatus = (game:GetService("ReplicatedStorage"):FindFirstChild("Diablo") or game:GetService("ReplicatedStorage"):FindFirstChild("Deandre") or game:GetService("ReplicatedStorage"):FindFirstChild("Urban") or game:GetService("Workspace").Enemies:FindFirstChild("Diablo") or game:GetService("Workspace").Enemies:FindFirstChild("Deandre") or game:GetService("Workspace").Enemies:FindFirstChild("Urban")) and '✅️' or '❌️'
+        local currentStatus = (game:GetService("ReplicatedStorage"):FindFirstChild("Diablo") or game:GetService("ReplicatedStorage"):FindFirstChild("Deandre") or game:GetService("ReplicatedStorage"):FindFirstChild("Urban") or game:GetService("Workspace").Enemies:FindFirstChild("Diablo") or game:GetService("Workspace").Enemies:FindFirstChild("Deandre") or game:GetService("Workspace").Enemies:FindFirstChild("Urban")) and '' or ''
         local progress = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("EliteHunter","Progress")
         if currentStatus ~= previousStatus then
             EliteHunter:SetDesc("Status: " .. currentStatus .. " | Killed: " .. tostring(progress or 0))
@@ -3371,9 +3371,6 @@ local function _farmGetAllInRange(maxDist)
     end
     return list
 end
-
-end
-
 
 local function startNearestFarm()
     if nearestFarmConn then nearestFarmConn:Disconnect() end
@@ -7977,7 +7974,7 @@ spawn(function()
             return game.ReplicatedStorage.Remotes.CommF_:InvokeServer("templedoorcheck")
         end)
         if success then
-            local currentStatus = result and "✅" or "❌"
+            local currentStatus = result and "" or ""
             if currentStatus ~= previousStatus then
                 Pullever:SetDesc("Status: " .. currentStatus)
                 previousStatus = currentStatus
