@@ -1,8 +1,3 @@
--- ===== GIẢM LAG: Giới hạn FPS xuống 30 =====
-if setfps then
-    setfps(30)
-end
-
 -- =============================================
 --           KEY SYSTEM
 -- Hướng dẫn:
@@ -223,17 +218,6 @@ repeat task.wait(0.1) until keyPassed
 --        HẾT KEY SYSTEM - SCRIPT CHẠY TỪ ĐÂY
 -- =============================================
 
--- Auto chọn phe Hải Quân khi vào game
-spawn(function()
-    local player = game:GetService("Players").LocalPlayer
-    for i = 1, 60 do
-        task.wait(1)
-        if player.Team and player.Team.Name ~= "Neutral" and player.Team.Name ~= "" then break end
-        pcall(function()
-            game.ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Marines")
-        end)
-    end
-end)
 -- Anti White Flash (chặn flash trắng khi quái chết + skill VFX)
 spawn(function()
     local Lighting = game:GetService("Lighting")
@@ -2495,7 +2479,7 @@ Tabs.Player:AddButton({
         canChangeTeam = true
     end
 })
-Toggle = Tabs.Player:AddToggle("Toggle3", { Title = "Auto Summon Cake Prince", Description = "When you attack 500 monsters, you will automatically summon Cake Prince", Default = true })
+Toggle = Tabs.Player:AddToggle("Toggle3", { Title = "Auto Summon Cake Prince", Description = "", Default = true })
 Toggle:OnChanged(function(Value)
     pcall(function() getgenv().AutoSpawnCP = Value end)
 end)
@@ -3050,7 +3034,8 @@ spawn(function()
         end)
     end
 end)
-Toggle = Tabs.Setting:AddToggle("Toggle19", {Title = "Spin Position", Description = "Spin Position When Farm", Default = true })
+Toggle = Tabs.Setting:AddToggle("Toggle19", {Title = "Spin Position", Description = "", Default = true })
+getgenv().SpinPos = true
 Toggle:OnChanged(function(Value)
     pcall(function() getgenv().SpinPos = Value end)
 end)
@@ -3068,7 +3053,7 @@ Slider = Tabs.Setting:AddSlider("SliderSpinDist", {
 })
 Slider = Tabs.Setting:AddSlider("SliderSpinSpeed", {
      Title = "Spin Speed",
-     Description = "Tốc độ xoay (càng cao xoay càng nhanh)",
+     Description = "",
      Default = 5,
      Min = 1,
      Max = 20,
@@ -3119,7 +3104,7 @@ spawn(function()
         end
     end
 end)
-Toggle = Tabs.Setting:AddToggle("Toggle21", {Title = "Anti Cheat Farming", Description = "This feature helps you Farm safely without being detected", Default = true })
+Toggle = Tabs.Setting:AddToggle("Toggle21", {Title = "Anti Cheat Farming", Description = "", Default = true })
 Toggle:OnChanged(function(Value)
     pcall(function() getgenv().ResetFlags = Value end)
 end)
@@ -3201,11 +3186,9 @@ local function _farmGetFarmCF(mob)
     if not mob or not mob:FindFirstChild("HumanoidRootPart") then return nil end
     local hp = mob.HumanoidRootPart
     local mp = hp.Position
-    local mc = hp.CFrame
-    local lf = Vector3.new(mc.LookVector.X, 0, mc.LookVector.Z)
-    lf = lf.Magnitude > 0.01 and lf.Unit or Vector3.new(0, 0, 1)
-    local tp = Vector3.new(mp.X + (-lf * 25).X, mp.Y + 25, mp.Z + (-lf * 25).Z)
-    return CFrame.new(tp, tp + lf)
+    local spinOffset = (Pos and typeof(Pos) == "CFrame") and Vector3.new(Pos.X, Pos.Y, Pos.Z) or Vector3.new(0, 0, 0)
+    local tp = Vector3.new(mp.X + spinOffset.X, mp.Y + spinOffset.Y + 2, mp.Z + spinOffset.Z)
+    return CFrame.new(tp, mp)
 end
 
 local function _farmGetNearest(nameList)
@@ -3599,11 +3582,11 @@ end)
 -- ===== FARM NEAREST ENEMY =====
 Tabs.Farming:AddParagraph({
     Title = "Farm Nearest Enemy",
-    Content = "Tự động tìm và farm enemy gần nhất, không cần quest"
+    Content = ""
 })
 Slider = Tabs.Farming:AddSlider("SliderNearestRange", {
     Title = "Nearest Farm Range",
-    Description = "Khoảng cách tìm enemy (studs)",
+    Description = "",
     Default = 2000,
     Min = 100,
     Max = 5000,
@@ -4027,7 +4010,7 @@ Toggle:OnChanged(function(Value)
     getgenv().MasteryFarm = Value
     StopTween(getgenv().MasteryFarm)
 end)
-Toggle = Tabs.Farming:AddToggle("Toggle25", {Title = "Skill Z", Default = true })
+Toggle = Tabs.Farming:AddToggle("Toggle25", {Title = "Skill Z", Default = false })
 Toggle:OnChanged(function(Value)
     pcall(function() getgenv().SkillZ = Value end)
 end)
@@ -4476,7 +4459,7 @@ Toggle:OnChanged(function(Value)
     getgenv().AutoEliteHunter = Value
     StopTween(getgenv().AutoEliteHunter)
 end)
-Toggle = Tabs.Stack:AddToggle("Toggle36", {Title = "Hop Server Elite Hunter", Description = "Find New Elite Hunter Server", Default = false })
+Toggle = Tabs.Stack:AddToggle("Toggle36", {Title = "Hop Server Elite Hunter", Description = "", Default = false })
 Toggle:OnChanged(function(Value)
     getgenv().AutoEliteHunterHop = Value
 end)
@@ -6197,7 +6180,7 @@ Tabs.Raid:AddSection("Dungeon Farm")
 
 Tabs.Raid:AddToggle("DR_DungeonToggle", {
     Title       = "Auto Dungeon Farm",
-    Description = "Vào Dungeon trước rồi mới bật",
+    Description = "",
     Default     = false,
     Callback    = function(v)
         if v then
@@ -7722,7 +7705,7 @@ spawn(function()
         end
     end)
 end)
-Toggle = Tabs.Race:AddToggle("Toggle100", {Title = "Auto Get Cyborg", Description = "Buy Chip And Kill Order", Default = false })
+Toggle = Tabs.Race:AddToggle("Toggle100", {Title = "Auto Get Cyborg", Description = "", Default = false })
 Toggle:OnChanged(function(Value)
     getgenv().AutoCyborg = Value
 end)
@@ -8487,7 +8470,7 @@ spawn(function()
         end
     end
 end)
-Toggle = Tabs.Item:AddToggle("Toggle119", {Title = "Auto Get CDK", Description = "Teleport To Claim CDK", Default = false })
+Toggle = Tabs.Item:AddToggle("Toggle119", {Title = "Auto Get CDK", Description = "", Default = false })
 Toggle:OnChanged(function(Value)
     getgenv().AutoGetCDK = Value
 end)
